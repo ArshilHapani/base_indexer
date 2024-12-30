@@ -1,0 +1,35 @@
+Server Software:        
+Server Hostname:        localhost
+Server Port:            5000
+
+Document Path:          /api/v1/tokens/0xca4569949699d56e1834efe9f58747ca0f151b01/getTokenHolders?page=1
+Document Length:        2463 bytes
+
+Concurrency Level:      100
+Time taken for tests:   2.012 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      26860000 bytes
+HTML transferred:       24630000 bytes
+Requests per second:    4969.02 [#/sec] (mean)
+Time per request:       20.125 [ms] (mean)
+Time per request:       0.201 [ms] (mean, across all concurrent requests)
+Transfer rate:          13033.97 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   1.5      1      17
+Processing:     6   18  11.9     15     108
+Waiting:        5   18  11.7     14     106
+Total:          7   20  12.4     16     112
+
+Percentage of the requests served within a certain time (ms)
+  50%     16
+  66%     18
+  75%     20
+  80%     21
+  90%     37
+  95%     43
+  98%     51
+  99%     96
+ 100%    112 (longest request)

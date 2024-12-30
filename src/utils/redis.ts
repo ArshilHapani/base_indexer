@@ -1,6 +1,6 @@
-import { createClient } from 'redis';
+import { createClient, type RedisClientType } from 'redis';
 
-let client;
+let client: RedisClientType | null = null;
 
 if (!client) {
   client = createClient({

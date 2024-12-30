@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 
 import { verifyAddress } from '@/utils';
 
-export async function requireToken(
+export default async function requireToken(
   req: Request,
   res: Response,
   next: NextFunction

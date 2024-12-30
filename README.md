@@ -1,15 +1,9 @@
-# defi_backend
+# Used External API
 
-To install dependencies:
+- [Mobula](https://docs.mobula.io/introduction)
+- [Alchemy (Base RPC Provider)](https://dashboard.alchemy.com/)
+- [Chainbase (for finding token holders)](https://docs.chainbase.com/introduction/about)
 
-```bash
-bun install
-```
+# BASE CHAIN ID
 
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.1.42. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+8453
