@@ -1,14 +1,13 @@
 import express from 'express';
 
-import { getAvailableTokenAsPerChain } from '@/controllers/tokens/getTokens';
 import { getLatestBlock } from '@/controllers';
 import tokenRouter from './tokens';
+import poolRouter from './pools';
 
 const router = express.Router();
 
-router.get('/tokens', getAvailableTokenAsPerChain);
-
 router.use('/tokens', tokenRouter);
+router.use('/pools', poolRouter);
 
 /* MICS Routes */
 router.get('/getLatestBlock', getLatestBlock);
