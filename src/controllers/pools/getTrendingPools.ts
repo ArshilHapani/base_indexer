@@ -4,13 +4,13 @@ import { getLiquidityPools, getTokenHolders } from '@/utils/helpers';
 import getOrSetCacheRedis from '@/utils/helpers/getOrSetRedisCache';
 import { getTokenMetadata } from '@/utils/helpers/rpcCalls';
 
-export default async function getNewPools(req: Request, res: Response) {
+export default async function getTrendingPools(req: Request, res: Response) {
   try {
     const { page, chain } = req.query;
 
     const data = await getOrSetCacheRedis(
-      `liquidity-pools-${page ?? 1}-${chain ?? 'base'}`,
-      () => getLiquidityPools(chain?.toString(), page?.toString()),
+      `liquidity-trending-pools-${page ?? 1}-${chain ?? 'base'}`,
+      () => getLiquidityPools(chain?.toString(), page?.toString(), true),
     );
     const parsed = await Promise.all(
       data.data.map(async (pool: any) => {
@@ -31,7 +31,7 @@ export default async function getNewPools(req: Request, res: Response) {
       }),
     );
     res.status(200).json({
-      message: `Fetched ${parsed.length} new pools`,
+      message: `Fetched ${parsed.length} trending pools`,
       success: true,
       data: parsed,
     });

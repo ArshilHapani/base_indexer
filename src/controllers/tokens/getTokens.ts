@@ -3,26 +3,26 @@ import type { Request, Response } from 'express';
 import getBaseResponse from '@/utils/helpers/getBaseResponse';
 import getOrSetCacheRedis from '@/utils/helpers/getOrSetRedisCache';
 import { DEFAULT_CACHE_TIME } from '@/utils/constants';
+import {
+  getLiquidityPools,
+  getTokenDataFromLiquidityPoolRes,
+} from '@/utils/helpers';
 
 export async function getAvailableTokenAsPerChain(req: Request, res: Response) {
   try {
-    const { chain } = req.query;
-    if (!chain) {
-      res.status(400).json(getBaseResponse('Chain is required', false));
-      return;
-    }
+    const { chain: queryChain } = req.query;
+
+    let chain = queryChain?.toString().toLowerCase() ?? 'base';
     const data = await getOrSetCacheRedis(
       `tokens-${chain}`,
       () => getAllTokenList(chain.toString()),
-      DEFAULT_CACHE_TIME
+      DEFAULT_CACHE_TIME,
     );
 
     res.json({
-      message: `Fetched ${data?.data?.length ?? 0} tokens for ${chain}`,
+      message: `Fetched ${data?.length ?? 0} tokens for ${chain}`,
       success: true,
-      data: {
-        data: data.data,
-      },
+      data,
     });
   } catch (e: any) {
     console.log(`Error at "handleInitRequest" controller`, e.message);
@@ -31,9 +31,11 @@ export async function getAvailableTokenAsPerChain(req: Request, res: Response) {
 }
 
 async function getAllTokenList(chain: string) {
-  const request = await fetch(
-    `https://api.mobula.io/api/1/market/query/token?sortBy=listed_at&sortOrder=desc&blockchain=${chain}`
+  const data = await getOrSetCacheRedis(
+    'liquidity-pools',
+    () => getLiquidityPools(chain),
+    DEFAULT_CACHE_TIME,
   );
-  const data = await request.json();
-  return data;
+  const parsed = await getTokenDataFromLiquidityPoolRes(data);
+  return parsed;
 }
