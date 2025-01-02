@@ -1,3 +1,4 @@
+import axios from 'axios';
 import type { Request, Response } from 'express';
 
 import getOrSetCacheRedis from '@/utils/helpers/getOrSetRedisCache';
@@ -9,14 +10,14 @@ export default async function getLatestCreatedPairs(
   try {
     const { chain } = req.query;
     const data = await getOrSetCacheRedis(
-      `latest-pairs-${chain?.toString()}`,
+      `latest-pairs-${chain?.toString() ?? 'base'}`,
       () => getLatestPools(chain?.toString() ?? 'Base'),
     );
 
     res.json({
-      message: `Fetched ${data.data.length} latest created pairs`,
+      message: `Fetched ${data.length} latest created pairs`,
       success: true,
-      data: data.data,
+      data: data,
     });
   } catch (e: any) {
     console.log(`Error at getLatestCreatedPairs: ${e.message}`);
@@ -29,7 +30,6 @@ export default async function getLatestCreatedPairs(
 
 async function getLatestPools(chain?: string) {
   const url = `https://api.mobula.io/api/1/market/query/token?sortBy=listed_at&sortOrder=desc&blockchain=${chain}`;
-  const response = await fetch(url);
-  const data = await response.json();
-  return data;
+  const { data, status } = await axios.get(url);
+  return status === 200 ? data.data : [];
 }

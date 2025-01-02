@@ -2,10 +2,10 @@ import type { NextFunction, Request, Response } from 'express';
 
 import { verifyAddress } from '@/utils';
 
-export default async function requireToken(
+export default async function requireAddress(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   if (!req.params.address) {
     res.status(400).json({

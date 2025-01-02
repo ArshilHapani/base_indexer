@@ -1,5 +1,7 @@
-import getOrSetCacheRedis from '@/utils/helpers/getOrSetRedisCache';
+import axios from 'axios';
 import type { Request, Response } from 'express';
+
+import getOrSetCacheRedis from '@/utils/helpers/getOrSetRedisCache';
 
 export default async function getPoolTrades(req: Request, res: Response) {
   try {
@@ -31,7 +33,6 @@ export default async function getPoolTrades(req: Request, res: Response) {
 
 async function getTrades(address: string, chain: string) {
   const url = `https://api.geckoterminal.com/api/v2/networks/${chain}/pools/${address}/trades`;
-  const response = await fetch(url);
-  const data = await response.json();
+  const { data } = await axios.get(url);
   return data.data;
 }

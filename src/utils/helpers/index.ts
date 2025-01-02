@@ -1,5 +1,10 @@
+import { ethers } from 'ethers';
+import axios from 'axios';
+
 import getOrSetCacheRedis from './getOrSetRedisCache';
 import { getTokenMetadata, getTransactionCount } from './rpcCalls';
+import getProvider from '../ethers';
+import { tokenABI } from '../constants';
 
 export async function getTokenDataFromLiquidityPoolRes(apiRes: any) {
   if (!apiRes.data || apiRes.data.length === 0) {
@@ -46,10 +51,10 @@ export async function getLiquidityPools(
   if (!chain) {
     chain = 'base';
   }
-  const request = await fetch(
+  const { data, status } = await axios.get(
     `https://api.geckoterminal.com/api/v2/networks/${chain}/${trending ? 'trending_pools' : 'new_pools'}?page=${page ?? 1}`,
   );
-  return await request.json();
+  return status === 200 ? data : [];
 }
 
 export async function getTokenHolders(token: string, chainId?: number) {
@@ -58,17 +63,55 @@ export async function getTokenHolders(token: string, chainId?: number) {
     `token-holders-${token}-${chainId}`,
     async function () {
       const url = `https://api.chainbase.online/v1/token/top-holders?contract_address=${token}&chain_id=${chainId}`;
-      const req = await fetch(url, {
-        method: 'GET',
+      const { data, status } = await axios.get(url, {
         headers: {
           'x-api-key': process.env.CHAINBASE_API_KEY!,
         },
       });
-      const data = await req.json();
-      if (data.message == 'ok') {
-        return data.data as any[];
-      }
-      return [];
+      if (status == 429) throw new Error('Rate limit exceeded');
+      return status === 200 ? data : [];
     },
   );
+}
+
+export function hexToNumber(hex: string) {
+  return parseInt(hex, 16);
+}
+
+export async function getUserBalance({
+  user,
+  token,
+}: {
+  user: string;
+  token: string;
+}): Promise<{
+  rawBalance: string;
+  balance: string;
+  decimals: string;
+}> {
+  try {
+    const data = await getOrSetCacheRedis(
+      `user-balance-${user}-${token}`,
+      async function () {
+        const provider = getProvider();
+        const tokenContract = new ethers.Contract(token, tokenABI, provider);
+        const rawBalance = await tokenContract.balanceOf(user);
+        const decimals = await tokenContract.decimals();
+        const balance = ethers.formatUnits(rawBalance, decimals);
+        return {
+          rawBalance: rawBalance.toString(),
+          balance: balance.toString(),
+          decimals: decimals.toString(),
+        };
+      },
+    );
+    return data;
+  } catch (e: any) {
+    console.log(`Error at "getUserBalance" helper`, e.message);
+    return {
+      rawBalance: '0',
+      balance: '0',
+      decimals: '0',
+    };
+  }
 }

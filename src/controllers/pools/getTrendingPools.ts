@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 
-import { getLiquidityPools, getTokenHolders } from '@/utils/helpers';
+import { getLiquidityPools } from '@/utils/helpers';
 import getOrSetCacheRedis from '@/utils/helpers/getOrSetRedisCache';
 import { getTokenMetadata } from '@/utils/helpers/rpcCalls';
 
@@ -16,12 +16,12 @@ export default async function getTrendingPools(req: Request, res: Response) {
       data.data.map(async (pool: any) => {
         const address = pool.relationships.base_token.data.id.split('base_')[1];
         const tokenMetadata = await getTokenMetadata(address);
-        const tokenHolders = await getTokenHolders(address);
+        // const tokenHolders = await getTokenHolders(address); // very fast rate limit
         return {
           quoteTokenAddress: address,
           age: calculateAgeFromDate(pool.attributes.pool_created_at),
           liquidity: pool.attributes.reserve_in_usd,
-          holders: tokenHolders.length,
+          // holders: tokenHolders.length,
           baseTokenPriceInUSD: pool.attributes.base_token_price_usd,
           baseTokenPriceInNativeCurrency:
             pool.attributes.base_token_price_native_currency,
@@ -38,7 +38,7 @@ export default async function getTrendingPools(req: Request, res: Response) {
   } catch (e: any) {
     console.log(`Error at getNewPools: ${e.message}`);
     res.status(500).json({
-      message: 'Internal Server Error',
+      message: 'Internal Server Error due to ' + e.message,
       success: false,
     });
   }

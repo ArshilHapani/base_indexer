@@ -1,3 +1,4 @@
+import axios from 'axios';
 import type { Request, Response } from 'express';
 
 import getBaseResponse from '@/utils/helpers/getBaseResponse';
@@ -11,7 +12,7 @@ export default async function getTokenInfo(req: Request, res: Response) {
     const data = await getOrSetCacheRedis(
       `token-info-${address}`,
       () => getTokensList(address),
-      DEFAULT_CACHE_TIME
+      DEFAULT_CACHE_TIME,
     );
     if (!data.data) {
       res.status(404).json(getBaseResponse('Token not found', false));
@@ -29,9 +30,8 @@ export default async function getTokenInfo(req: Request, res: Response) {
 }
 
 async function getTokensList(address: string) {
-  const response = await fetch(
-    `https://api.mobula.io/api/1/market/data?asset=${address}&blockchain=Base`
+  const { data } = await axios.get(
+    `https://api.mobula.io/api/1/market/data?asset=${address}&blockchain=Base`,
   );
-  const data = await response.json();
   return data;
 }

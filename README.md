@@ -8,7 +8,7 @@
 
 8453
 
-# GraphQL Query to get top 10 pools by liquidity
+# GraphQL Query to get top 10 pools by liquidity from uniswap subgraph
 
 ```graphql
 {

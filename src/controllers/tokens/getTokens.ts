@@ -8,7 +8,10 @@ import {
   getTokenDataFromLiquidityPoolRes,
 } from '@/utils/helpers';
 
-export async function getAvailableTokenAsPerChain(req: Request, res: Response) {
+export default async function getAvailableTokenAsPerChain(
+  req: Request,
+  res: Response,
+) {
   try {
     const { chain: queryChain } = req.query;
 
