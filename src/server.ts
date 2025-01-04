@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv';
 import v1Router from '@/routes/v1';
 import { defaultController } from '@/controllers/';
 import healthRouter from './routes/health';
+import { setupSwagger } from './swagger';
 
 dotenv.config();
 
@@ -17,6 +18,8 @@ app.get('/', defaultController);
 
 app.use('/health', healthRouter);
 app.use('/api/v1', v1Router);
+
+setupSwagger(app);
 
 const PORT = process.env.PORT || 5000;
 

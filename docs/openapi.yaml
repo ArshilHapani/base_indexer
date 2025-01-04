@@ -1,0 +1,49 @@
+openapi: 3.1.0
+info:
+  title: Base Backend
+  version: 0.0.1
+  description: DEFI Application backend for base blockchain
+servers:
+  - url: http://localhost:5000/api/v1
+  - description: local server (secret key required)
+  - url: http://localhost:5000/
+  - description: local server (public)
+  - url: https://base-defi-backend.services.stellus.io/api/v1
+  - description: server hosted on caprover (secret key required)
+  - url: https://base-defi-backend.services.stellus.io/
+  - description: server hosted on caprover (public)
+paths:
+  /tokens:
+    get:
+      summary: Get all tokens
+      responses:
+        '200':
+          description: List of tokens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas.yaml#/Token'
+  /health:
+    get:
+      summary: Returns a health check.
+      description: Optional extended description in CommonMark or HTML.
+      responses:
+        '200': # status code
+          description: A JSON object with the status of the health check
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the health check
+                  time:
+                    type: string
+                    description: Time of the health check
+
+                example:
+                  status: 'UP'
+                  time: '2025-01-04T20:39:18.875Z'
