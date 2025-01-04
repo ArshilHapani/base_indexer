@@ -18,3 +18,9 @@ stress-test-ab:
 
 stress-test-k6:
 	@k6 run tests/stress-test.js
+
+build-image:
+	@docker build -t defi-backend:latest .
+
+start-container:
+	@docker run -d --name defi-backend-container --network="host" --env-file .env -p 5000:5000 defi-backend:latest
