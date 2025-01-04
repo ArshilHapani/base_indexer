@@ -1,10 +1,14 @@
-import express from 'express';
+import { Router } from 'express';
 
 import tokenRouter from './tokens';
 import poolRouter from './pools';
 import userRouter from './user';
 
-const router = express.Router();
+import requireSecret from '@/middleware/requireSecret';
+
+const router = Router();
+
+router.use('/', requireSecret);
 
 router.use('/tokens', tokenRouter);
 router.use('/pools', poolRouter);

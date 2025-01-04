@@ -5,8 +5,9 @@ import getRecentTransactions from '@/controllers/tokens/transactions/getRecentTr
 import getTokenHolders from '@/controllers/tokens/getTokenHolders';
 import getAvailableTokenAsPerChain from '@/controllers/tokens/getTokens';
 import getDiscoverTokens from '@/controllers/tokens/getDiscoverTokens';
-import requireToken from '@/middleware/requireAddress';
 import getWhales from '@/controllers/tokens/getWhales';
+
+import requireToken from '@/middleware/requireAddress';
 
 const tokenRouter = Router();
 
