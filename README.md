@@ -1,3 +1,9 @@
+# CI Status
+
+[![Docker](https://github.com/ArshilHapani/stellus_defi_backend/actions/workflows/scan-image.yml/badge.svg)](https://github.com/ArshilHapani/stellus_defi_backend/actions/workflows/scan-image.yml)
+
+[![Docker Image CI](https://github.com/ArshilHapani/stellus_defi_backend/actions/workflows/docker-image.yml/badge.svg)](https://github.com/ArshilHapani/stellus_defi_backend/actions/workflows/docker-image.yml)
+
 # Used External API
 
 - [Mobula](https://docs.mobula.io/introduction)
