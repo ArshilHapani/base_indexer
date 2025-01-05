@@ -3,10 +3,7 @@ name: Build and push Docker image to registry (CI)
 on:
   push:
     branches:
-      - master
-  pull_request:
-    branches:
-      - master
+      - prod
 
 jobs:
   build-and-push:

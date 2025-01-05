@@ -4,6 +4,8 @@
 
 [![Docker Image CI](https://github.com/ArshilHapani/stellus_defi_backend/actions/workflows/docker-image.yml/badge.svg)](https://github.com/ArshilHapani/stellus_defi_backend/actions/workflows/docker-image.yml)
 
+[![Build and push Docker image to registry (CI)](https://github.com/ArshilHapani/stellus_defi_backend/actions/workflows/push-image-to-registry.yml/badge.svg)](https://github.com/ArshilHapani/stellus_defi_backend/actions/workflows/push-image-to-registry.yml)
+
 # Used External API
 
 - [Mobula](https://docs.mobula.io/introduction)
@@ -22,7 +24,7 @@
     orderBy: liquidity
     orderDirection: desc
     first: 10
-    where: {createdAtTimestamp_gt: "1735521415"}
+    where: { createdAtTimestamp_gt: "1735521415" }
   ) {
     liquidity
     token0 {
