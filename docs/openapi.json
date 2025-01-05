@@ -1,0 +1,292 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Base Backend",
+    "version": "0.0.1",
+    "description": "DEFI Application backend for base blockchain"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api/v1",
+      "description": "local server (secret key required)"
+    },
+    {
+      "url": "http://localhost:5000/",
+      "description": "local server (public)"
+    },
+    {
+      "url": "https://base-defi-backend.services.stellus.io/api/v1",
+      "description": "server hosted on caprover (secret key required)"
+    },
+    {
+      "url": "https://base-defi-backend.services.stellus.io/",
+      "description": "server hosted on caprover (public)"
+    }
+  ],
+  "paths": {
+    "/tokens": {
+      "get": {
+        "summary": "Get all tokens",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SecretHeaders"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenRoutes/getAvailableTokenAsPerChain"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/tokens/discover": {
+      "get": {
+        "summary": "Get trending tokens (from multi chain)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SecretHeaders"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenRoutes/getDiscoverTokens"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Returns a health check.",
+        "description": "Optional extended description in CommonMark or HTML.",
+        "responses": {
+          "200": {
+            "description": "A JSON object with the status of the health check",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthRoute"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "SecretHeaders": {
+        "name": "x-secret",
+        "in": "header",
+        "required": true,
+        "description": "Header's secret used to verify the incoming request",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "TokenRoutes": {
+        "getAvailableTokenAsPerChain": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "success": {
+              "type": "boolean"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "address": {
+                    "type": "string"
+                  },
+                  "tokenPriceUSD": {
+                    "type": "string"
+                  },
+                  "tokenPriceNative": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "tokenData": {
+                    "type": "object",
+                    "properties": {
+                      "decimals": {
+                        "type": "number"
+                      },
+                      "logo": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "symbol": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "liquidityInUSD": {
+                    "type": "string"
+                  },
+                  "poolCreatedAt": {
+                    "type": "string"
+                  },
+                  "transactionCount": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "getDiscoverTokens": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "success": {
+              "type": "boolean"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "contracts": {
+                    "type": "object",
+                    "properties": {
+                      "address": {
+                        "type": "string"
+                      },
+                      "blockchain": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "trending_score": {
+                    "type": "number"
+                  },
+                  "platforms": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "rank": {
+                          "type": "number"
+                        },
+                        "weight": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  },
+                  "price_change_24h": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "pair": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "HealthRoute": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status of the health check"
+          },
+          "time": {
+            "type": "string",
+            "description": "Time of the health check"
+          }
+        },
+        "example": {
+          "status": "UP",
+          "time": "2025-01-04T20:39:18.875Z"
+        }
+      },
+      "DefaultResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "responses": {
+      "UnauthorizedResponse": {
+        "description": "Unauthorized request if secret key is not provided",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DefaultResponse"
+            }
+          }
+        }
+      },
+      "InternalServerErrorResponse": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DefaultResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}

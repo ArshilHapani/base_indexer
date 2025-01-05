@@ -1,49 +1,1897 @@
 openapi: 3.1.0
+
 info:
   title: Base Backend
   version: 0.0.1
-  description: DEFI Application backend for base blockchain
+  description: |
+    Backend API for Base blockchain DeFi operations.
+
+    ## Authentication
+    All secured endpoints require `x-secret` header.
+
+    ## Support
+    For support, email arshilhapani998@gmail.com
+
 servers:
   - url: http://localhost:5000/api/v1
-  - description: local server (secret key required)
+    description: local server (secret key required)
   - url: http://localhost:5000/
-  - description: local server (public)
+    description: local server (public)
   - url: https://base-defi-backend.services.stellus.io/api/v1
-  - description: server hosted on caprover (secret key required)
+    description: server hosted on caprover (secret key required)
   - url: https://base-defi-backend.services.stellus.io/
-  - description: server hosted on caprover (public)
+    description: server hosted on caprover (public)
+
+tags:
+  - name: Tokens
+    description: Token related endpoints
+  - name: Pools
+    description: Pool related endpoints
+  - name: User
+    description: User related endpoints
+  - name: Health
+    description: Health check endpoint
+
 paths:
   /tokens:
     get:
+      tags:
+        - Tokens
       summary: Get all tokens
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
       responses:
         '200':
           description: List of tokens
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '../components/schemas.yaml#/Token'
+                $ref: '#/components/schemas/TokenRoutes/getAvailableTokenAsPerChain'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /tokens/discover:
+    get:
+      tags:
+        - Tokens
+      summary: Get trending tokens (from multi chain)
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+      responses:
+        '200':
+          description: List of tokens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getDiscoverTokens'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /tokens/{address}:
+    get:
+      tags:
+        - Tokens
+      summary: Get information about a specific token by its address
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+        - $ref: '#/components/parameters/tokenAddress'
+      responses:
+        '200':
+          description: Information about the token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getTokenInfoResponse'
+        '400':
+          description: Invalid address format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '404':
+          description: Token not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /tokens/{address}/getRecentTransactions:
+    get:
+      tags:
+        - Tokens
+      summary: Get recent transactions of a specific token by its address
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+        - $ref: '#/components/parameters/tokenAddress'
+      responses:
+        '200':
+          description: Information about the token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getRecentTransactionsResponse'
+        '400':
+          description: Invalid address format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '404':
+          description: Token not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /tokens/{address}/getTokenHolders:
+    get:
+      tags:
+        - Tokens
+      summary: Get token holders of a specific token by its address
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+        - $ref: '#/components/parameters/tokenAddress'
+        - name: limit
+          in: query
+          required: false
+          description: Number of token holders to fetch
+          schema:
+            type: integer
+            default: 20
+        - name: page
+          in: query
+          required: false
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Information about the token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getTokenHoldersResponse'
+        '400':
+          description: Invalid address format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '404':
+          description: Token not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /tokens/{address}/getWhales:
+    get:
+      tags:
+        - Tokens
+      summary: Get whales of a specific token by its address
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+        - $ref: '#/components/parameters/tokenAddress'
+        - name: limit
+          in: query
+          required: false
+          description: Number of whales to fetch
+          schema:
+            type: integer
+            default: 20
+        - name: page
+          in: query
+          required: false
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Information about the token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getWhalesResponse'
+        '400':
+          description: Invalid address format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '404':
+          description: Token not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /pools:
+    get:
+      tags:
+        - Pools
+      summary: Get new pools
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+        - name: page
+          in: query
+          required: false
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+        - name: chain
+          in: query
+          required: false
+          description: Chain name
+          schema:
+            type: string
+            default: 'base'
+
+      responses:
+        '200':
+          description: List of pools
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getNewPools'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /pools/trending:
+    get:
+      tags:
+        - Pools
+      summary: Get trending pools
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+        - name: page
+          in: query
+          required: false
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+        - name: chain
+          in: query
+          required: false
+          description: Chain name
+          schema:
+            type: string
+            default: 'base'
+
+      responses:
+        '200':
+          description: List of pools
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getTrendingPools'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /pools/trades:
+    get:
+      tags:
+        - Pools
+      summary: Get trades of a specific pool
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+        - name: poolAddress
+          in: query
+          required: true
+          description: Pool ID
+          schema:
+            type: string
+            default: '0x36545f9123a356faa3e0f3728f1e0c416814580a'
+        - name: chain
+          in: query
+          required: false
+          description: Chain name
+          schema:
+            type: string
+            default: 'base'
+
+      responses:
+        '200':
+          description: List of trades
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getTradesOnPool'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /pools/pairs/latest:
+    get:
+      tags:
+        - Pools
+      summary: Get latest pairs
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+        - name: chain
+          in: query
+          required: false
+          description: Chain name
+          schema:
+            type: string
+            default: 'base'
+
+      responses:
+        '200':
+          description: List of pairs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getLatestPairs'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /pools/pairs/{pairAddress}:
+    get:
+      tags:
+        - Pools
+      summary: Get pair by address
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+        - name: pairAddress
+          in: path
+          required: true
+          description: Pair address
+          schema:
+            type: string
+            default: '0x731814e491571a2e9ee3c5b1f7f3b962ee8f4870'
+        - name: chain
+          in: query
+          required: false
+          description: Chain name
+          schema:
+            type: string
+            default: 'base'
+
+      responses:
+        '200':
+          description: Pair details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getPairByAddress'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /user/{address}/getTokenHoldings:
+    get:
+      tags:
+        - User
+      summary: Get token holdings of a specific user
+      parameters:
+        - $ref: '#/components/parameters/SecretHeaders'
+        - name: address
+          in: path
+          required: true
+          description: User address
+          schema:
+            type: string
+            default: '0xa816ee97b1d7ae50fb0c68672a56f45334b90aa7'
+        - name: chain
+          in: query
+          required: false
+          description: Chain name
+          schema:
+            type: string
+            default: base
+      responses:
+        '200':
+          description: Information about the token holdings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRoutes/getUserHoldings'
+        '400':
+          description: Invalid address format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '404':
+          description: Token not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
   /health:
     get:
+      tags:
+        - Health
       summary: Returns a health check.
       description: Optional extended description in CommonMark or HTML.
       responses:
-        '200': # status code
+        '200':
           description: A JSON object with the status of the health check
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/HealthRoute'
+
+components:
+  parameters:
+    SecretHeaders:
+      name: x-secret
+      in: header
+      required: true
+      description: Header's secret used to verify the incoming request
+      schema:
+        type: string
+
+    tokenAddress:
+      name: address
+      in: path
+      required: true
+      description: The address of the token
+      schema:
+        type: string
+        default: '0xca4569949699d56e1834efe9f58747ca0f151b01'
+
+  schemas:
+    TokenRoutes:
+      title: 'Token Routes Response'
+      description: 'Schema for token-related responses'
+      type: object
+      getAvailableTokenAsPerChain:
+        type: object
+        properties:
+          message:
+            type: string
+          success:
+            type: boolean
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                address:
+                  type: string
+                tokenPriceUSD:
+                  type: string
+                tokenPriceNative:
+                  type: string
+                name:
+                  type: string
+                tokenData:
+                  type: object
+                  properties:
+                    decimals:
+                      type: number
+                    logo:
+                      type: string
+                      nullable: true
+                    name:
+                      type: string
+                    symbol:
+                      type: string
+                liquidityInUSD:
+                  type: string
+                poolCreatedAt:
+                  type: string
+                transactionCount:
+                  type: number
+      getDiscoverTokens:
+        type: object
+        properties:
+          message:
+            type: string
+          success:
+            type: boolean
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  nullable: true
+                name:
+                  type: string
+                contracts:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    blockchain:
+                      type: string
+                trending_score:
+                  type: number
+                platforms:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      rank:
+                        type: number
+                      weight:
+                        type: number
+                price_change_24h:
+                  type: number
+                  nullable: true
+                pair:
+                  type: string
+                  nullable: true
+      getTokenInfoResponse:
+        type: object
+        properties:
+          message:
+            type: string
+          success:
+            type: boolean
+          data:
+            type: object
+            properties:
+              id:
+                type: number
+              market_cap:
+                type: number
+              market_cap_diluted:
+                type: number
+              liquidity:
+                type: number
+              price:
+                type: number
+              off_chain_volume:
+                type: number
+              volume:
+                type: number
+              volume_change_24h:
+                type: number
+              volume_7d:
+                type: number
+              is_listed:
+                type: boolean
+              price_change_24h:
+                type: number
+              price_change_1h:
+                type: number
+              price_change_7d:
+                type: number
+              price_change_1m:
+                type: number
+              price_change_1y:
+                type: number
+              ath:
+                type: number
+              atl:
+                type: number
+              name:
+                type: string
+              symbol:
+                type: string
+              logo:
+                type: string
+              rank:
+                type: number
+              contracts:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    blockchain:
+                      type: string
+                    blockchainId:
+                      type: string
+                    decimals:
+                      type: number
+              total_supply:
+                type: string
+              circulating_supply:
+                type: string
+              decimals:
+                type: number
+              priceNative:
+                type: number
+              native:
                 type: object
                 properties:
-                  status:
+                  name:
                     type: string
-                    description: The status of the health check
-                  time:
+                  symbol:
                     type: string
-                    description: Time of the health check
+                  decimals:
+                    type: number
+                  address:
+                    type: string
+                  type:
+                    type: string
+                  logo:
+                    type: string
+                  id:
+                    type: number
+        example:
+          message: 'Fetched token info'
+          success: true
+          data:
+            id: 102482277
+            market_cap: 35472486
+            market_cap_diluted: 60586036
+            liquidity: 5203
+            price: 0.006058603551312304
+            off_chain_volume: 740011
+            volume: 3073
+            volume_change_24h: -31.66555404663086
+            volume_7d: 3073
+            is_listed: true
+            price_change_24h: 9.079201
+            price_change_1h: -3.0361776
+            price_change_7d: 0
+            price_change_1m: 109.19473
+            price_change_1y: 60.08351
+            ath: 0.006058603551312304
+            atl: 0.006058603551312304
+            name: 'Token Metrics AI'
+            symbol: 'TMAI'
+            logo: 'https://metacore.mobula.io/e2da31c96fca2ff21edfec4d8f1640090212933ad6aae9f1157067cb5886bf8f.png'
+            rank: 958
+            contracts:
+              - address: '0xca4569949699d56e1834efe9f58747ca0f151b01'
+                blockchain: 'Base'
+                blockchainId: '8453'
+                decimals: 18
+            total_supply: '10000000000'
+            circulating_supply: '5854894737'
+            decimals: 18
+            priceNative: 0.0000016747583394883037
+            native:
+              name: 'Ethereum'
+              symbol: 'ETH'
+              decimals: 18
+              address: '0x4200000000000000000000000000000000000006'
+              type: 'eth'
+              logo: 'https://metacore.mobula.io/60989b438a473ed77703f7bcd3530fc15542996a6607ae831de8c5e3e10f688d.png'
+              id: 100004304
+      getRecentTransactionsResponse:
+        type: object
+        properties:
+          message:
+            type: string
+          success:
+            type: boolean
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                block_number:
+                  type: number
+                block_timestamp:
+                  type: string
+                  format: date-time
+                contract_address:
+                  type: string
+                from_address:
+                  type: string
+                log_index:
+                  type: number
+                to_address:
+                  type: string
+                transaction_hash:
+                  type: string
+                transaction_index:
+                  type: number
+                tx_fee:
+                  type: number
+                tx_type:
+                  type: number
+                value:
+                  type: string
+        example:
+          message: 'Fetched 20 transactions'
+          success: true
+          data:
+            - block_number: 24641011
+              block_timestamp: '2025-01-05T10:02:49Z'
+              contract_address: '0xca4569949699d56e1834efe9f58747ca0f151b01'
+              from_address: '0x3d31e86cc26234ad6985af46a75aeb6e4e1ff676'
+              log_index: 117
+              to_address: '0x5d382f21e60f182cc99ecbf78edd615a117fe270'
+              transaction_hash: '0x9247cc4b7c2d52c36584db6f971beb9b04866171d5ec77302f6a2313edbe11de'
+              transaction_index: 41
+              tx_fee: 0
+              tx_type: 0
+              value: '16674296100165920059909'
+            - block_number: 24641011
+              block_timestamp: '2025-01-05T10:02:49Z'
+              contract_address: '0xca4569949699d56e1834efe9f58747ca0f151b01'
+              from_address: '0x99473274f8ddde2d736f548d2d6f916bf00dd9f5'
+              log_index: 112
+              to_address: '0x3d31e86cc26234ad6985af46a75aeb6e4e1ff676'
+              transaction_hash: '0x9247cc4b7c2d52c36584db6f971beb9b04866171d5ec77302f6a2313edbe11de'
+              transaction_index: 41
+              tx_fee: 0
+              tx_type: 0
+              value: '16674296100165920059909'
+      getTokenHoldersResponse:
+        type: object
+        properties:
+          message:
+            type: string
+          success:
+            type: boolean
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                address:
+                  type: string
+                balance:
+                  type: string
+                  description: 'Token holder balance in human-readable format'
+                decimals:
+                  type: string
+                  description: 'Number of decimals used for the token'
+                rawBalance:
+                  type: string
+                  description: 'Token holder balance in raw format'
+        example:
+          message: 'Fetched 30 token holders'
+          success: true
+          data:
+            - address: '0x8ee87cd9eef20a5b7b81b3b947bd40e65fd51e99'
+              balance: '5.413963562675899794'
+              decimals: '18'
+              rawBalance: '5413963562675899794'
+            - address: '0x8ee87cd9eef20a5b7b81b3b947bd40e65fd51e99'
+              balance: '10.521465864871236414'
+              decimals: '18'
+              rawBalance: '10521465864871236414'
+            - address: '0x8ee87cd9eef20a5b7b81b3b947bd40e65fd51e99'
+              balance: '9.447779418338890772'
+              decimals: '18'
+              rawBalance: '9447779418338890772'
+            - address: '0x8ee87cd9eef20a5b7b81b3b947bd40e65fd51e99'
+              balance: '191.951761280809875533'
+              decimals: '18'
+              rawBalance: '191951761280809875533'
+            - address: '0x8ee87cd9eef20a5b7b81b3b947bd40e65fd51e99'
+              balance: '1133.750922673489649044'
+              decimals: '18'
+              rawBalance: '1133750922673489649044'
+      getWhalesResponse:
+        type: object
+        properties:
+          message:
+            type: string
+            description: 'Message indicating the status of the request'
+          success:
+            type: boolean
+            description: 'Indicates whether the request was successful'
+          data:
+            type: array
+            description: 'List of whale details'
+            items:
+              type: object
+              properties:
+                amount:
+                  type: string
+                  description: "Whale's token amount in human-readable format"
+                original_amount:
+                  type: string
+                  description: "Whale's token amount in raw format"
+                usd_value:
+                  type: string
+                  description: "USD value of the whale's holdings"
+                wallet_address:
+                  type: string
+                  description: 'Wallet address of the whale'
+        example:
+          message: 'Fetched 30 whales'
+          success: true
+          data:
+            - amount: '962522758.122971384419186312'
+              original_amount: '962522758122971384419186312'
+              usd_value: '0.000000'
+              wallet_address: '0x2854ff6be20eb2adcf97b75db645c938ffd56d8c'
+            - amount: '2097437.008865993722727664'
+              original_amount: '2097437008865993722727664'
+              usd_value: '0.000000'
+              wallet_address: '0x54bb708d5a65e5ecddb9a457f69470cd51e825c7'
+            - amount: '1177448.776730925522242110'
+              original_amount: '1177448776730925522242110'
+              usd_value: '0.000000'
+              wallet_address: '0xb7d93a915c71f633a5daa6c772563f5683c30791'
+            - amount: '1036330.705237103780498995'
+              original_amount: '1036330705237103780498995'
+              usd_value: '0.000000'
+              wallet_address: '0x50f1c71a6ae7be982162106bfb965cee333dc80b'
+            - amount: '827014.462753063609683902'
+              original_amount: '827014462753063609683902'
+              usd_value: '0.000000'
+              wallet_address: '0x7e33d20d9214803c8cceaea0a29d566783cc6898'
+            - amount: '448275.874557083338470931'
+              original_amount: '448275874557083338470931'
+              usd_value: '0.000000'
+              wallet_address: '0x3fb3f33a9beca22383e7cf64b44f8db393034711'
+            - amount: '354038.376680001918794158'
+              original_amount: '354038376680001918794158'
+              usd_value: '0.000000'
+              wallet_address: '0x6b94522aa564a066da4349b6046d2a47597103d6'
+            - amount: '341936.356233124493269780'
+              original_amount: '341936356233124493269780'
+              usd_value: '0.000000'
+              wallet_address: '0xc4ed2dfbc1e1f8f3626a1a9d71416c037f6f835c'
+            - amount: '324419.728587853742126125'
+              original_amount: '324419728587853742126125'
+              usd_value: '0.000000'
+              wallet_address: '0x47b805463d87f4c52b73258dcb7d38ffd91f540b'
+            - amount: '317461.691269163340242044'
+              original_amount: '317461691269163340242044'
+              usd_value: '0.000000'
+              wallet_address: '0x95d4167f6d1de8d357f12c8117eb405e20ad8842'
 
-                example:
-                  status: 'UP'
-                  time: '2025-01-04T20:39:18.875Z'
+      getNewPools:
+        type: object
+        properties:
+          message:
+            type: string
+            description: Status message of the response.
+          success:
+            type: boolean
+            description: Indicates the success of the request.
+          data:
+            type: array
+            description: Array of pool objects.
+            items:
+              type: object
+              properties:
+                tokens:
+                  type: object
+                  description: Details of tokens in the pool.
+                  properties:
+                    baseToken:
+                      type: object
+                      properties:
+                        baseTokenAddress:
+                          type: string
+                          description: Address of the base token.
+                        decimals:
+                          type: integer
+                          description: Decimal precision of the base token.
+                        logo:
+                          type: string
+                          nullable: true
+                          description: Logo URL of the base token.
+                        name:
+                          type: string
+                          description: Name of the base token.
+                        symbol:
+                          type: string
+                          description: Symbol of the base token.
+                    quoteToken:
+                      type: object
+                      properties:
+                        quoteTokenAddress:
+                          type: string
+                          description: Address of the quote token.
+                        decimals:
+                          type: integer
+                          description: Decimal precision of the quote token.
+                        logo:
+                          type: string
+                          nullable: true
+                          description: Logo URL of the quote token.
+                        name:
+                          type: string
+                          description: Name of the quote token.
+                        symbol:
+                          type: string
+                          description: Symbol of the quote token.
+                age:
+                  type: string
+                  description: Age of the pool.
+                liquidity:
+                  type: string
+                  description: Liquidity of the pool.
+                baseTokenPriceInUSD:
+                  type: string
+                  description: Base token price in USD.
+                baseTokenPriceInNativeCurrency:
+                  type: string
+                  description: Base token price in the native currency.
+                id:
+                  type: string
+                  description: Unique identifier for the pool.
+                type:
+                  type: string
+                  description: Type of the resource.
+                attributes:
+                  type: object
+                  description: Detailed attributes of the pool.
+                  properties:
+                    base_token_price_usd:
+                      type: string
+                      description: Base token price in USD.
+                    base_token_price_native_currency:
+                      type: string
+                      description: Base token price in the native currency.
+                    quote_token_price_usd:
+                      type: string
+                      description: Quote token price in USD.
+                    quote_token_price_native_currency:
+                      type: string
+                      description: Quote token price in the native currency.
+                    base_token_price_quote_token:
+                      type: string
+                      description: Price of the base token in terms of the quote token.
+                    quote_token_price_base_token:
+                      type: string
+                      description: Price of the quote token in terms of the base token.
+                    address:
+                      type: string
+                      description: Address of the pool.
+                    name:
+                      type: string
+                      description: Name of the pool.
+                    pool_created_at:
+                      type: string
+                      format: date-time
+                      description: Timestamp when the pool was created.
+                    fdv_usd:
+                      type: string
+                      description: Fully diluted valuation in USD.
+                    market_cap_usd:
+                      type: string
+                      nullable: true
+                      description: Market cap in USD, if available.
+                    price_change_percentage:
+                      type: object
+                      description: Price change percentages over various timeframes.
+                      properties:
+                        m5:
+                          type: string
+                        h1:
+                          type: string
+                        h6:
+                          type: string
+                        h24:
+                          type: string
+                    transactions:
+                      type: object
+                      description: Number of transactions over various timeframes.
+                      properties:
+                        m5:
+                          type: object
+                          properties:
+                            buys:
+                              type: integer
+                            sells:
+                              type: integer
+                            buyers:
+                              type: integer
+                            sellers:
+                              type: integer
+                        m15:
+                          type: object
+                          properties:
+                            buys:
+                              type: integer
+                            sells:
+                              type: integer
+                            buyers:
+                              type: integer
+                            sellers:
+                              type: integer
+                        m30:
+                          type: object
+                          properties:
+                            buys:
+                              type: integer
+                            sells:
+                              type: integer
+                            buyers:
+                              type: integer
+                            sellers:
+                              type: integer
+                        h1:
+                          type: object
+                          properties:
+                            buys:
+                              type: integer
+                            sells:
+                              type: integer
+                            buyers:
+                              type: integer
+                            sellers:
+                              type: integer
+                        h24:
+                          type: object
+                          properties:
+                            buys:
+                              type: integer
+                            sells:
+                              type: integer
+                            buyers:
+                              type: integer
+                            sellers:
+                              type: integer
+                    volume_usd:
+                      type: object
+                      description: Volume in USD over various timeframes.
+                      properties:
+                        m5:
+                          type: string
+                        h1:
+                          type: string
+                        h6:
+                          type: string
+                        h24:
+                          type: string
+                    reserve_in_usd:
+                      type: string
+                      description: Reserve value in USD.
+                relationships:
+                  type: object
+                  description: Related entities for the pool.
+                  properties:
+                    base_token:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Identifier for the base token.
+                            type:
+                              type: string
+                              description: Type of the related entity.
+                    quote_token:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Identifier for the quote token.
+                            type:
+                              type: string
+                              description: Type of the related entity.
+                    dex:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Identifier for the DEX.
+                            type:
+                              type: string
+                              description: Type of the related entity.
+      getTrendingPools:
+        type: object
+        properties:
+          message:
+            type: string
+            description: Describes the result of the request.
+            example: 'Fetched 20 trending pools'
+          success:
+            type: boolean
+            description: Indicates if the request was successful.
+            example: true
+          data:
+            type: array
+            description: List of trending pools.
+            items:
+              type: object
+              properties:
+                quoteTokenAddress:
+                  type: string
+                  description: The address of the quote token.
+                  example: '0xd1d7aa941c71fd95e9d31bbd81937b3e71bd6231'
+                age:
+                  type: string
+                  description: Age of the pool.
+                  example: '2 days'
+                liquidity:
+                  type: string
+                  description: The liquidity of the pool in USD.
+                  example: '249718.4876'
+                baseTokenPriceInUSD:
+                  type: string
+                  description: The price of the base token in USD.
+                  example: '0.120505107919886'
+                baseTokenPriceInNativeCurrency:
+                  type: string
+                  description: The price of the base token in the native currency.
+                  example: '0.0000334308583576929'
+                token:
+                  type: object
+                  description: Base token details.
+                  properties:
+                    decimals:
+                      type: integer
+                      description: Number of decimals of the token.
+                      example: 18
+                    logo:
+                      type: string
+                      description: URL of the token logo (nullable).
+                      example: null
+                    name:
+                      type: string
+                      description: Name of the token.
+                      example: 'Oracle'
+                    symbol:
+                      type: string
+                      description: Symbol of the token.
+                      example: 'ORCL'
+                id:
+                  type: string
+                  description: Unique identifier for the pool.
+                  example: 'base_0x1668affef786ed3ba75ae293d73caeeee9dba992'
+                type:
+                  type: string
+                  description: Type of the entity (always "pool").
+                  example: 'pool'
+                attributes:
+                  type: object
+                  description: Attributes of the pool.
+                  properties:
+                    base_token_price_usd:
+                      type: string
+                      description: Price of the base token in USD.
+                      example: '0.120505107919886'
+                    base_token_price_native_currency:
+                      type: string
+                      description: Price of the base token in native currency.
+                      example: '0.0000334308583576929'
+                    quote_token_price_usd:
+                      type: string
+                      description: Price of the quote token in USD.
+                      example: '3611.25294596623'
+                    quote_token_price_native_currency:
+                      type: string
+                      description: Price of the quote token in native currency.
+                      example: '1.0'
+                    base_token_price_quote_token:
+                      type: string
+                      description: Price of the base token relative to the quote token.
+                      example: '0.00003343'
+                    quote_token_price_base_token:
+                      type: string
+                      description: Price of the quote token relative to the base token.
+                      example: '29912.48'
+                    address:
+                      type: string
+                      description: Address of the pool.
+                      example: '0x1668affef786ed3ba75ae293d73caeeee9dba992'
+                    name:
+                      type: string
+                      description: Name of the pool.
+                      example: 'ORCL / WETH'
+                    pool_created_at:
+                      type: string
+                      format: date-time
+                      description: Pool creation timestamp.
+                      example: '2025-01-02T15:57:09Z'
+                    fdv_usd:
+                      type: string
+                      description: Fully diluted valuation of the pool in USD.
+                      example: '2527769'
+                    market_cap_usd:
+                      type: string
+                      description: Market cap of the pool in USD (nullable).
+                      example: null
+                    price_change_percentage:
+                      type: object
+                      description: Price change percentages over various time periods.
+                      properties:
+                        m5:
+                          type: string
+                          example: '0.83'
+                        h1:
+                          type: string
+                          example: '12.57'
+                        h6:
+                          type: string
+                          example: '30.86'
+                        h24:
+                          type: string
+                          example: '185.37'
+                    transactions:
+                      type: object
+                      description: Transaction details over various time periods.
+                      properties:
+                        m5:
+                          type: object
+                          properties:
+                            buys:
+                              type: integer
+                              example: 3
+                            sells:
+                              type: integer
+                              example: 4
+                            buyers:
+                              type: integer
+                              example: 3
+                            sellers:
+                              type: integer
+                              example: 2
+                        m15:
+                          type: object
+                          properties:
+                            buys:
+                              type: integer
+                              example: 7
+                            sells:
+                              type: integer
+                              example: 22
+                            buyers:
+                              type: integer
+                              example: 7
+                            sellers:
+                              type: integer
+                              example: 11
+                        m30:
+                          type: object
+                          properties:
+                            buys:
+                              type: integer
+                              example: 17
+                            sells:
+                              type: integer
+                              example: 50
+                            buyers:
+                              type: integer
+                              example: 16
+                            sellers:
+                              type: integer
+                              example: 24
+                        h1:
+                          type: object
+                          properties:
+                            buys:
+                              type: integer
+                              example: 57
+                            sells:
+                              type: integer
+                              example: 100
+                            buyers:
+                              type: integer
+                              example: 46
+                            sellers:
+                              type: integer
+                              example: 43
+                        h24:
+                          type: object
+                          properties:
+                            buys:
+                              type: integer
+                              example: 22165
+                            sells:
+                              type: integer
+                              example: 2677
+                            buyers:
+                              type: integer
+                              example: 20890
+                            sellers:
+                              type: integer
+                              example: 694
+                    volume_usd:
+                      type: object
+                      description: Pool volume in USD over various time periods.
+                      properties:
+                        m5:
+                          type: string
+                          example: '2334.8433773917'
+                        h1:
+                          type: string
+                          example: '37118.8100304089'
+                        h6:
+                          type: string
+                          example: '297386.176173458'
+                        h24:
+                          type: string
+                          example: '1104731.31740831'
+                    reserve_in_usd:
+                      type: string
+                      description: Total reserve of the pool in USD.
+                      example: '249718.4876'
+                relationships:
+                  type: object
+                  description: Relationships of the pool with other entities.
+                  properties:
+                    base_token:
+                      type: object
+                      description: Base token details.
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: 'base_0xd1d7aa941c71fd95e9d31bbd81937b3e71bd6231'
+                            type:
+                              type: string
+                              example: 'token'
+                    quote_token:
+                      type: object
+                      description: Quote token details.
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: 'base_0x4200000000000000000000000000000000000006'
+                            type:
+                              type: string
+                              example: 'token'
+                    dex:
+                      type: object
+                      description: Details of the decentralized exchange.
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: 'uniswap-v2-base'
+                            type:
+                              type: string
+                              example: 'dex'
+      getTradesOnPool:
+        type: object
+        properties:
+          message:
+            type: string
+            example: 'Trade data retrieved successfully.'
+          success:
+            type: boolean
+            example: true
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: 'base_24641854_0x70c21043e7503c093d9430eba518f1e712062dd966e245110ebd66c485c510fe_204_1736073087'
+                type:
+                  type: string
+                  example: 'trade'
+                attributes:
+                  type: object
+                  properties:
+                    block_number:
+                      type: integer
+                      example: 24641854
+                    tx_hash:
+                      type: string
+                      example: '0x70c21043e7503c093d9430eba518f1e712062dd966e245110ebd66c485c510fe'
+                    tx_from_address:
+                      type: string
+                      example: '0x6114d5751ad4b2f832e2d0018fc8ae778f61f12b'
+                    from_token_amount:
+                      type: string
+                      example: '27397.807561199'
+                    to_token_amount:
+                      type: string
+                      example: '60.7232014406594'
+                    price_from_in_currency_token:
+                      type: string
+                      example: '0.00000259217024339373'
+                    price_to_in_currency_token:
+                      type: string
+                      example: '0.0011695658300192'
+                    price_from_in_usd:
+                      type: string
+                      example: '0.00936098242790162'
+                    price_to_in_usd:
+                      type: string
+                      example: '4.22359804915828'
+                    block_timestamp:
+                      type: string
+                      format: date-time
+                      example: '2025-01-05T10:30:55Z'
+                    kind:
+                      type: string
+                      example: 'sell'
+                    volume_in_usd:
+                      type: string
+                      example: '256.470395143414'
+                    from_token_address:
+                      type: string
+                      example: '0x1e2093ab84768948c6176db5ad98c909ce97f368'
+                    to_token_address:
+                      type: string
+                      example: '0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b'
+      getLatestPairs:
+        type: object
+        properties:
+          message:
+            type: string
+            example: 'Fetched 20 latest created pairs'
+          success:
+            type: boolean
+            example: true
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 'Elon Trump'
+                symbol:
+                  type: string
+                  example: 'ELONTRUMP'
+                address:
+                  type: string
+                  example: '0xb64628b39796b553e82d91b36835843202f1fa2a'
+                blockchain:
+                  type: string
+                  example: 'Base'
+                decimals:
+                  type: integer
+                  example: 18
+                volume_24h:
+                  type: number
+                  example: 0
+                listed_at:
+                  type: string
+                  format: date-time
+                  example: '2025-01-05T10:18:13+00:00'
+                pairs:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      token0:
+                        type: object
+                        properties:
+                          address:
+                            type: string
+                            example: '0x4200000000000000000000000000000000000006'
+                          price:
+                            type: number
+                            example: 3613.614467642436
+                          priceToken:
+                            type: number
+                            example: 164371390.49311417
+                          priceTokenString:
+                            type: string
+                            example: '164371390.49311417341232299804687500000000'
+                          logo:
+                            type: string
+                            example: 'https://metacore.mobula.io/60989b438a473ed77703f7bcd3530fc15542996a6607ae831de8c5e3e10f688d.png'
+                          approximateReserveUSD:
+                            type: number
+                            example: 162684.92333326247
+                          approximateReserveTokenRaw:
+                            type: string
+                            example: '45020000000000000000'
+                          approximateReserveToken:
+                            type: number
+                            example: 45.02
+                          symbol:
+                            type: string
+                            example: 'ETH'
+                          name:
+                            type: string
+                            example: 'Ethereum'
+                          id:
+                            type: integer
+                            example: 100004304
+                          decimals:
+                            type: integer
+                            example: 18
+                          totalSupply:
+                            type: integer
+                            example: 120474343
+                          circulatingSupply:
+                            type: integer
+                            example: 120477549
+                      token1:
+                        type: object
+                        properties:
+                          address:
+                            type: string
+                            example: '0xb64628b39796b553e82d91b36835843202f1fa2a'
+                          price:
+                            type: number
+                            example: 0.000021984449099089522
+                          priceToken:
+                            type: number
+                            example: 6.083783783783784e-9
+                          priceTokenString:
+                            type: string
+                            example: '0.00000000608378378378378400228555'
+                          approximateReserveUSD:
+                            type: number
+                            example: 0
+                          approximateReserveTokenRaw:
+                            type: string
+                            example: '7400000000000000000000000000'
+                          approximateReserveToken:
+                            type: number
+                            example: 7400000000
+                          symbol:
+                            type: string
+                            example: 'ELONTRUMP'
+                          name:
+                            type: string
+                            example: 'Elon Trump'
+                          totalSupply:
+                            type: integer
+                            example: 7400000000
+                          circulatingSupply:
+                            type: integer
+                            example: 7400000000
+                      volume24h:
+                        type: number
+                        example: 0
+                      liquidity:
+                        type: number
+                        example: 162684.92333326247
+                      blockchain:
+                        type: string
+                        example: 'Base'
+                      address:
+                        type: string
+                        example: '0x5d5ae917a49380cff76dec5c48e857b3377a76e5'
+                      createdAt:
+                        type: string
+                        format: date-time
+                        example: '2025-01-05T10:18:13.000Z'
+                      type:
+                        type: string
+                        example: 'univ2'
+                      baseToken:
+                        type: string
+                        example: 'token1'
+                      factory:
+                        type: string
+                        example: '0x8909dc15e40173ff4699343b6eb8132c65e18ec6'
+                      quoteToken:
+                        type: string
+                        example: 'token0'
+                      price_change_5min:
+                        type: number
+                        example: 0
+                      price_change_1h:
+                        type: number
+                        example: 0
+                      price_change_4h:
+                        type: number
+                        example: 0
+                      price_change_12h:
+                        type: number
+                        example: 0
+                      price_change_24h:
+                        type: number
+                        example: 0
+                      trades_5min:
+                        type: number
+                        example: 0
+                      buys_5min:
+                        type: number
+                        example: 0
+                      sells_5min:
+                        type: number
+                        example: 0
+                      volume_5min:
+                        type: number
+                        example: 0
+                      buy_volume_5min:
+                        type: number
+                        example: 0
+                      sell_volume_5min:
+                        type: number
+                        example: 0
+                      trades_1h:
+                        type: number
+                        example: 0
+                      buys_1h:
+                        type: number
+                        example: 0
+                      sells_1h:
+                        type: number
+                        example: 0
+                      volume_1h:
+                        type: number
+                        example: 0
+                      buy_volume_1h:
+                        type: number
+                        example: 0
+                      sell_volume_1h:
+                        type: number
+                        example: 0
+                      trades_4h:
+                        type: number
+                        example: 0
+                      buys_4h:
+                        type: number
+                        example: 0
+                      sells_4h:
+                        type: number
+                        example: 0
+                      volume_4h:
+                        type: number
+                        example: 0
+                      buy_volume_4h:
+                        type: number
+                        example: 0
+                      sell_volume_4h:
+                        type: number
+                        example: 0
+                      trades_12h:
+                        type: number
+                        example: 0
+                      buys_12h:
+                        type: number
+                        example: 0
+                      sells_12h:
+                        type: number
+                        example: 0
+                      volume_12h:
+                        type: number
+                        example: 0
+                      buy_volume_12h:
+                        type: number
+                        example: 0
+                      sell_volume_12h:
+                        type: number
+                        example: 0
+                      trades_24h:
+                        type: number
+                        example: 0
+                      buys_24h:
+                        type: number
+                        example: 0
+                      sells_24h:
+                        type: number
+                        example: 0
+                      volume_24h:
+                        type: number
+                        example: 0
+                      buy_volume_24h:
+                        type: number
+                        example: 0
+                      sell_volume_24h:
+                        type: number
+                        example: 0
+      getPairByAddress:
+        type: object
+        properties:
+          message:
+            type: string
+            example: 'Fetched 26 pairs for 0x731814e491571a2e9ee3c5b1f7f3b962ee8f4870'
+          success:
+            type: boolean
+            example: true
+          data:
+            type: object
+            properties:
+              pairs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    token0:
+                      type: object
+                      properties:
+                        address:
+                          type: string
+                          example: '0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b'
+                        price:
+                          type: number
+                          example: 4.167140424912635
+                        priceToken:
+                          type: number
+                          example: 38.18856476348346
+                        priceTokenString:
+                          type: string
+                          example: '38.18856476348346262739141820929945'
+                        logo:
+                          type: string
+                          example: 'https://metacore.mobula.io/b764f2e0f7e3f54f66ffd17613dc2a30c626eb17f270a078f67a7ef5916da0a7.png'
+                        approximateReserveUSD:
+                          type: number
+                          example: 2297761.3835187135
+                        approximateReserveTokenRaw:
+                          type: string
+                          example: '549902631837478495392896'
+                        approximateReserveToken:
+                          type: number
+                          example: 549902.6318
+                        symbol:
+                          type: string
+                          example: 'VIRTUAL'
+                        name:
+                          type: string
+                          example: 'Virtuals Protocol'
+                        id:
+                          type: integer
+                          example: 353
+                        decimals:
+                          type: integer
+                          example: 18
+                        totalSupply:
+                          type: integer
+                          example: 1000000000
+                        circulatingSupply:
+                          type: integer
+                          example: 999998502
+                    token1:
+                      type: object
+                      properties:
+                        address:
+                          type: string
+                          example: '0x731814e491571a2e9ee3c5b1f7f3b962ee8f4870'
+                        logo:
+                          type: string
+                          example: 'https://metacore.mobula.io/31c0e20fa038a5c066be34a37d62750bbd450ba6eb114e3e8f1caabe5385712f.png'
+                        price:
+                          type: number
+                          example: 0.10941724901737465
+                        priceToken:
+                          type: number
+                          example: 0.02618584925077406
+                        priceTokenString:
+                          type: string
+                          example: '0.02618584925077405839433097867186'
+                        approximateReserveUSD:
+                          type: number
+                          example: 2291521.486895806
+                        approximateReserveTokenRaw:
+                          type: string
+                          example: '20999992269535546104418315'
+                        approximateReserveToken:
+                          type: number
+                          example: 20999992.2695
+                        symbol:
+                          type: string
+                          example: 'VADER'
+                        name:
+                          type: string
+                          example: 'VaderAI by Virtuals'
+                        id:
+                          type: integer
+                          example: 102486341
+                        totalSupply:
+                          type: integer
+                          example: 996739513
+                        circulatingSupply:
+                          type: integer
+                          example: 996739513
+                    volume24h:
+                      type: number
+                      example: 67681158.97377554
+                    liquidity:
+                      type: number
+                      example: 4589282.87041452
+                    blockchain:
+                      type: string
+                      example: 'Base'
+                    address:
+                      type: string
+                      example: '0xa1dddb82501e8fe2d92ad0e8ba331313f501de72'
+                    createdAt:
+                      type: string
+                      format: date-time
+                      example: '2024-11-01T19:29:21.000Z'
+                    type:
+                      type: string
+                      example: 'univ2'
+                    baseToken:
+                      type: string
+                      example: 'token1'
+                    factory:
+                      type: string
+                      example: '0x8909dc15e40173ff4699343b6eb8132c65e18ec6'
+                    quoteToken:
+                      type: string
+                      example: 'token0'
+                    price:
+                      type: number
+                      example: 0.10941724901737465
+                    priceToken:
+                      type: number
+                      example: 0.02618584925077406
+                    priceTokenString:
+                      type: string
+                      example: '0.02618584925077405839433097867186'
+
+      getUserHoldings:
+        type: object
+        properties:
+          message:
+            type: string
+            example: 'Fetched token holdings'
+          success:
+            type: boolean
+            example: true
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                contractAddress:
+                  type: string
+                  example: '0x1fe265db428ec5dbcd69e4aecfc47791a4e5f0bd'
+                tokenBalance:
+                  type: string
+                  example: '280000000000000000000'
+                metadata:
+                  type: object
+                  properties:
+                    decimals:
+                      type: integer
+                      example: 18
+                    logo:
+                      type: string
+                      nullable: true
+                      example: null
+                    name:
+                      type: string
+                      example: 'Oh No'
+                    symbol:
+                      type: string
+                      example: 'OHNO'
+
+    HealthRoute:
+      title: 'Health Check Response'
+      description: 'Schema for health check endpoint'
+      type: object
+      properties:
+        status:
+          type: string
+          description: The status of the health check
+        time:
+          type: string
+          description: Time of the health check
+      example:
+        status: 'UP'
+        time: '2025-01-04T20:39:18.875Z'
+    DefaultResponse:
+      title: 'Default Response'
+      description: 'Default response structure for success/error'
+      type: object
+      properties:
+        message:
+          type: string
+        success:
+          type: boolean
+  responses:
+    UnauthorizedResponse:
+      description: Unauthorized request if secret key is not provided
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DefaultResponse'
+    InternalServerErrorResponse:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DefaultResponse'

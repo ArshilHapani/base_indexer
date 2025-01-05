@@ -10,7 +10,7 @@ import {
 
 export default async function getAvailableTokenAsPerChain(
   req: Request,
-  res: Response,
+  res: Response
 ) {
   try {
     const { chain: queryChain } = req.query;
@@ -19,7 +19,7 @@ export default async function getAvailableTokenAsPerChain(
     const data = await getOrSetCacheRedis(
       `tokens-${chain}`,
       () => getAllTokenList(chain.toString()),
-      DEFAULT_CACHE_TIME,
+      DEFAULT_CACHE_TIME
     );
 
     res.json({
@@ -37,7 +37,7 @@ async function getAllTokenList(chain: string) {
   const data = await getOrSetCacheRedis(
     'liquidity-pools',
     () => getLiquidityPools(chain),
-    DEFAULT_CACHE_TIME,
+    DEFAULT_CACHE_TIME
   );
   const parsed = await getTokenDataFromLiquidityPoolRes(data);
   return parsed;
