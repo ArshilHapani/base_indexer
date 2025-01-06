@@ -3,8 +3,8 @@ import cors from 'cors';
 import * as dotenv from 'dotenv';
 
 import v1Router from '@/routes/v1';
-import { defaultController } from '@/controllers/';
 import healthRouter from './routes/health';
+import { defaultController } from '@/controllers/';
 import { setupSwagger } from './swagger';
 
 dotenv.config();

@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import getOrSetCacheRedis from './getOrSetRedisCache';
+import { getTotalSupply } from '.';
 
 export async function getTokenMetadata(address: string): Promise<{
   decimals: number | null;
@@ -19,7 +20,11 @@ export async function getTokenMetadata(address: string): Promise<{
           params: [address],
         },
       );
-      return data.result;
+      const totalSupply = await getTotalSupply(address);
+      return {
+        ...data.result,
+        totalSupply,
+      };
     });
   } catch (e: any) {
     console.log(`Error at "getTokenMetadata" helper`, e.message);

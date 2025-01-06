@@ -1,10 +1,12 @@
-import { ethers } from 'ethers';
 import axios from 'axios';
+import { ethers } from 'ethers';
 
 import getOrSetCacheRedis from './getOrSetRedisCache';
 import { getTokenMetadata, getTransactionCount } from './rpcCalls';
 import getProvider from '../ethers';
 import { tokenABI } from '../constants';
+
+const provider = getProvider();
 
 export async function getTokenDataFromLiquidityPoolRes(apiRes: any) {
   if (!apiRes.data || apiRes.data.length === 0) {
@@ -15,16 +17,15 @@ export async function getTokenDataFromLiquidityPoolRes(apiRes: any) {
   );
   const tokenData = await Promise.all(
     tokenAddresses.map(async function (address: string) {
-      return await getTokenMetadata(address);
+      return getTokenMetadata(address);
     }),
   );
   return await Promise.all(
     apiRes.data.map(async (pool: any, idx: number) => {
-      const baseToken = pool.relationships.base_token.data;
       const attributes = pool.attributes;
-      const address = baseToken.id.split('base_')[1];
+      const address = pool.relationships.base_token.data.id.split('base_')[1];
       return {
-        address: address,
+        address,
         tokenPriceUSD: attributes.base_token_price_usd,
         tokenPriceNative: attributes.base_token_price_native_currency,
         name: attributes.name.split(' /')[0],
@@ -93,7 +94,6 @@ export async function getUserBalance({
     const data = await getOrSetCacheRedis(
       `user-balance-${user}-${token}`,
       async function () {
-        const provider = getProvider();
         const tokenContract = new ethers.Contract(token, tokenABI, provider);
         const rawBalance = await tokenContract.balanceOf(user);
         const decimals = await tokenContract.decimals();
@@ -113,5 +113,54 @@ export async function getUserBalance({
       balance: '0',
       decimals: '0',
     };
+  }
+}
+
+export async function getTotalSupply(address: string): Promise<string> {
+  try {
+    const tokenContract = new ethers.Contract(address, tokenABI, provider);
+
+    // Call the totalSupply function
+    const totalSupply = await tokenContract.totalSupply();
+
+    // Get the decimals of the token
+    const decimals: number = await tokenContract.decimals();
+
+    // Convert totalSupply to a human-readable string
+    return ethers.formatUnits(totalSupply, decimals);
+  } catch (e: any) {
+    console.log(`Error at "getTotalSupply" helper`, e.message);
+    return '0';
+  }
+}
+
+export async function getTokenLaunchDate(address: string): Promise<string> {
+  try {
+    const tx = await provider.getTransactionReceipt(address);
+
+    if (!tx) {
+      throw new Error(
+        'Unable to fetch the transaction for the token contract.',
+      );
+    }
+
+    // Get the block number where the contract was created
+    const deploymentBlock = tx.blockNumber;
+
+    // Fetch the block details
+    const block = await provider.getBlock(deploymentBlock);
+
+    if (!block) {
+      throw new Error(
+        'Unable to fetch the block for the deployment transaction.',
+      );
+    }
+
+    // Convert the timestamp to a human-readable format
+    const deploymentDate = new Date(block.timestamp * 1000); // Convert seconds to milliseconds
+    return deploymentDate.toISOString();
+  } catch (e: any) {
+    console.log('error at getTokenLaunchDate');
+    return '0';
   }
 }

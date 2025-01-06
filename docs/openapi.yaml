@@ -486,6 +486,8 @@ components:
                       type: string
                     symbol:
                       type: string
+                    totalSupply:
+                      type: string
                 liquidityInUSD:
                   type: string
                 poolCreatedAt:

@@ -1,18 +1,49 @@
+REDIS_IMAGE=redis:7.4.1-alpine
+REDIS_CONTAINER=redis-stellus
+REDIS_PORT=6379
+
+POSTGRES_IMAGE=postgres:17.2-alpine3.21
+POSTGRES_CONTAINER=postgres-stellus
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+
+APP_CONTAINER=defi-backend-container
+APP_IMAGE=defi-backend:latest
+APP_PORT=5000
+
+.PHONY: setup-server start-redis-server start-postgres-server start-server stress-test-ab stress-test-k6 build-image start-container push-image
+
 setup-server:
 	@bun install
 	@cp .env.example .env
 	@echo "Add environment variables in .env file"
 
 start-redis-server:
-	@podman run -d --name redis-stellus -p 6379:6379 redis:latest
+	@if [ -z "$$(docker ps -a --filter "name=$(REDIS_CONTAINER)" --format '{{.Names}}')" ]; then \
+		echo "Starting new Redis container..."; \
+		docker run -d --name $(REDIS_CONTAINER) -p 6379:$(REDIS_PORT) $(REDIS_IMAGE); \
+	else \
+		echo "Redis container exists. Starting it..."; \
+		docker start $(REDIS_CONTAINER); \
+	fi
+
+start-postgres-server:
+	@if [ -z "$$(docker ps -a --filter "name=$(POSTGRES_CONTAINER)" --format '{{.Names}}')" ]; then \
+		echo "Starting new Postgres container..."; \
+		docker run -d --name $(POSTGRES_CONTAINER) -p 5432:$(POSTGRES_PORT) \
+			-e POSTGRES_USER=$(POSTGRES_USER) -e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) $(POSTGRES_IMAGE); \
+	else \
+		echo "Postgres container exists. Starting it..."; \
+		docker start $(POSTGRES_CONTAINER); \
+	fi
 
 start-server:
-	@podman container rm -f redis-stellus || true
-	@if ! podman ps --format "{{.Names}}" | grep -q "^redis-stellus$$"; then \
-		echo "Starting Redis Server"; \
-		$(MAKE) start-redis-server; \
-	fi
+	@docker container rm -f $(REDIS_CONTAINER) || true
+	@$(MAKE) start-redis-server
+	@$(MAKE) start-postgres-server
 	@bun start
+
 
 stress-test-ab:
 	@ab -n 5000 -c 500 http://localhost:5000/api/v1/tokens/0xca4569949699d56e1834efe9f58747ca0f151b01
@@ -24,7 +55,7 @@ build-image:
 	@docker build -t defi-backend:latest .
 
 start-container:
-	@docker run -d --name defi-backend-container --network="host" --env-file .env -p 5000:5000 defi-backend:latest
+	@docker run -d --name $(APP_CONTAINER) --network="host" --env-file .env -p 5000:$(APP_PORT) $(APP_IMAGE)
 
 push-image:
 	@if [ -z "$(TAG)" ]; then echo "Error: TAG is not set. Use 'make push-image TAG=<tag>'"; exit 1; fi
