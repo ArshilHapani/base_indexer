@@ -1,3 +1,7 @@
+/**
+ * @fileoverview rpcCalls.ts - Helper functions to make RPC calls to Alchemy
+ */
+
 import axios from 'axios';
 
 import getOrSetCacheRedis from './getOrSetRedisCache';

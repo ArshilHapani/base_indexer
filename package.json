@@ -6,7 +6,8 @@
     "start": "bun run --watch src/server.ts",
     "inspect-server": "bun run --inspect --watch src/server.ts",
     "pm2:watch": "pm2 start --watch src/server.ts",
-    "node:run": "tsx src/server.ts"
+    "node:run": "tsx src/server.ts",
+    "worker:tokenConsumer": "bun run --watch ./src/bullmq/workers/tokenConsumer.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -26,12 +27,15 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@prisma/client": "^6.1.0",
     "axios": "^1.7.9",
+    "bullmq": "^5.34.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "ethers": "^6.13.4",
     "express": "^4.21.2",
     "redis": "^4.7.0",
+    "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "ws": "^8.18.0",

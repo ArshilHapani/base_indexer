@@ -66,3 +66,6 @@ push-image:
 	@echo "Pushing image to Docker Hub with tag $(TAG)..."
 	@docker push docker.io/arshilhapani/defi-backend:$(TAG) || { echo "Image push failed"; exit 1; }
 	@echo "Image successfully pushed as arshilhapani/defi-backend:$(TAG)"
+
+worker-tokenConsumer:
+	@bun run worker:tokenConsumer

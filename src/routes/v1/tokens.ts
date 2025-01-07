@@ -6,6 +6,7 @@ import getTokenHolders from '@/controllers/tokens/getTokenHolders';
 import getAvailableTokenAsPerChain from '@/controllers/tokens/getTokens';
 import getDiscoverTokens from '@/controllers/tokens/getDiscoverTokens';
 import getWhales from '@/controllers/tokens/getWhales';
+import getQuoteHandler from '@/controllers/tokens/getQuote';
 
 import requireToken from '@/middleware/requireAddress';
 
@@ -13,6 +14,7 @@ const tokenRouter = Router();
 
 tokenRouter.get('/', getAvailableTokenAsPerChain);
 tokenRouter.get('/discover', getDiscoverTokens);
+tokenRouter.get('/quote', getQuoteHandler);
 
 // Token specific routes
 tokenRouter.use('/:address', requireToken);

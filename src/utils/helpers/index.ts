@@ -1,3 +1,7 @@
+/**
+ * @fileoverview index.ts - This file contains all the helper functions that are used in the api routes
+ */
+
 import axios from 'axios';
 import { ethers } from 'ethers';
 
@@ -6,7 +10,7 @@ import { getTokenMetadata, getTransactionCount } from './rpcCalls';
 import getProvider from '../ethers';
 import { tokenABI } from '../constants';
 
-const provider = getProvider();
+export const provider = getProvider();
 
 export async function getTokenDataFromLiquidityPoolRes(apiRes: any) {
   if (!apiRes.data || apiRes.data.length === 0) {
@@ -144,10 +148,8 @@ export async function getTokenLaunchDate(address: string): Promise<string> {
       );
     }
 
-    // Get the block number where the contract was created
     const deploymentBlock = tx.blockNumber;
 
-    // Fetch the block details
     const block = await provider.getBlock(deploymentBlock);
 
     if (!block) {
@@ -156,8 +158,7 @@ export async function getTokenLaunchDate(address: string): Promise<string> {
       );
     }
 
-    // Convert the timestamp to a human-readable format
-    const deploymentDate = new Date(block.timestamp * 1000); // Convert seconds to milliseconds
+    const deploymentDate = new Date(block.timestamp * 1000);
     return deploymentDate.toISOString();
   } catch (e: any) {
     console.log('error at getTokenLaunchDate');
