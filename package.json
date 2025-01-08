@@ -7,19 +7,21 @@
     "inspect-server": "bun run --inspect --watch src/server.ts",
     "pm2:watch": "pm2 start --watch src/server.ts",
     "node:run": "tsx src/server.ts",
-    "worker:tokenConsumer": "bun run --watch ./src/bullmq/workers/tokenConsumer.ts"
+    "worker:tokenConsumer": "bun run --watch ./tasks/workers/tokenConsumer.ts",
+    "cron:getTokens": "bun run --watch ./tasks/cron/c_getTokens.ts",
+    "start-manager":"bun run --watch ./tasks/manager.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/k6": "^0.54.2",
+    "@types/node-cron": "^3.0.11",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.7",
     "@types/ws": "^8.5.13",
     "@types/yamljs": "^0.2.34",
     "k6": "^0.0.0",
-    "nodemon": "^3.1.9",
     "prisma": "^6.1.0",
     "tsx": "^4.19.2"
   },
@@ -34,8 +36,8 @@
     "dotenv": "^16.4.7",
     "ethers": "^6.13.4",
     "express": "^4.21.2",
+    "node-cron": "^3.0.3",
     "redis": "^4.7.0",
-    "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "ws": "^8.18.0",

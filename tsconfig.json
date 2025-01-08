@@ -26,9 +26,14 @@
 
     // path alias
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "#/*": ["./*"]
     }
   },
-  "include": ["src"],
+  "include": [
+    "src",
+    "tasks/workers/tokenConsumer.ts",
+    "tasks/cron/c_getTokens.ts"
+  ],
   "exclude": ["node_modules"]
 }

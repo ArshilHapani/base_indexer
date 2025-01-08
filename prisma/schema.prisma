@@ -8,14 +8,15 @@ datasource db {
 }
 
 model Token {
-  id          Int     @id @default(autoincrement())
-  address     String  @unique
+  id          Int      @id @default(autoincrement())
+  address     String   @unique @db.VarChar(42)
   name        String
   symbol      String
   decimals    Int
   totalSupply Float
   logo        String?
   chainId     Int
+  createdAt   DateTime @default(now())
 }
 
 model Pool {

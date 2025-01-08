@@ -11,6 +11,7 @@ POSTGRES_PASSWORD=postgres
 APP_CONTAINER=defi-backend-container
 APP_IMAGE=defi-backend:latest
 APP_PORT=5000
+MANAGER_PORT=5010
 
 .PHONY: setup-server start-redis-server start-postgres-server start-server stress-test-ab stress-test-k6 build-image start-container push-image
 
@@ -69,3 +70,16 @@ push-image:
 
 worker-tokenConsumer:
 	@bun run worker:tokenConsumer
+
+schedule-cron:
+	@bun run cron:getTokens
+
+start-task-manager:
+	@bun run start-manager
+
+start-consumer-via-manager:
+	@if [ -z "$(TASK)" ]; then echo "Error: Task is not set. Use 'make start-consumer-via-manager TASK=<task>'"; exit 1; fi
+	@curl "http://localhost:$(MANAGER_PORT)/start?task=consumer"
+
+start-cron-via-manager:
+	@curl "http://localhost:$(MANAGER_PORT)/start?task=cron"

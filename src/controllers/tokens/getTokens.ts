@@ -7,7 +7,7 @@ import {
   getLiquidityPools,
   getTokenDataFromLiquidityPoolRes,
 } from '@/utils/helpers';
-import TokenProduceQueue from '@/bullmq/queues/tokenProducerQueue';
+import TokenProduceQueue from '@/queues/tokenProducerQueue';
 
 export default async function getAvailableTokenAsPerChain(
   req: Request,
@@ -27,11 +27,11 @@ export default async function getAvailableTokenAsPerChain(
       name: token.tokenData.name,
       symbol: token.tokenData.symbol,
       decimals: token.tokenData.decimals,
-      tokenSupply: token.tokenData.totalSupply,
+      totalSupply: Number(token.tokenData.totalSupply),
       logo: token.tokenData.logo,
       chainId: 8453, // base
     }));
-    await TokenProduceQueue.add(`token-${chain}`, { workerData });
+    TokenProduceQueue.add(`token-${chain}`, { workerData });
 
     res.json({
       message: `Fetched ${data?.length ?? 0} tokens for ${chain}`,

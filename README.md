@@ -9,10 +9,18 @@
 - [Mobula](https://docs.mobula.io/introduction)
 - [Alchemy (Base RPC Provider)](https://dashboard.alchemy.com/)
 - [Chainbase (for finding token holders)](https://docs.chainbase.com/introduction/about)
+- [Gecko terminal](https://api.geckoterminal.com/docs/index.html)
 
 # BASE CHAIN ID
 
 8453
+
+# Available process tasks
+
+The separate tasks are stored in `tasks` directory which needs to manage manually apart from the server
+
+- cron/c_getTokens.ts
+- workers/tokenConsumer.ts
 
 # GraphQL Query to get top 10 pools by liquidity from uniswap subgraph
 
@@ -44,6 +52,36 @@
       totalValueLocked
     }
     createdAtTimestamp
+  }
+}
+```
+
+# REST API Common response:
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": ...
+}
+```
+
+# Websocket Common response:
+
+```json
+{
+  "message": "Success",
+  "payload": ...
+}
+```
+
+# Websocket common request format:
+
+```json
+{
+  "type": "subscribe",
+  "payload": {
+    "channel": "channel_name"
   }
 }
 ```

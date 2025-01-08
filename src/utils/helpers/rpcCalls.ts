@@ -12,6 +12,7 @@ export async function getTokenMetadata(address: string): Promise<{
   logo: string | null;
   name: string | null;
   symbol: string | null;
+  totalSupply: string | null;
 }> {
   try {
     return getOrSetCacheRedis(`token-metadata-${address}`, async function () {
@@ -22,7 +23,7 @@ export async function getTokenMetadata(address: string): Promise<{
           jsonrpc: '2.0',
           method: 'alchemy_getTokenMetadata',
           params: [address],
-        },
+        }
       );
       const totalSupply = await getTotalSupply(address);
       return {
@@ -36,6 +37,7 @@ export async function getTokenMetadata(address: string): Promise<{
       decimals: null,
       logo: null,
       name: null,
+      totalSupply: null,
       symbol: null,
     };
   }
@@ -52,10 +54,10 @@ export async function getTransactionCount(address: string) {
           jsonrpc: '2.0',
           method: 'eth_getTransactionCount',
           params: [address],
-        },
+        }
       );
       return data;
-    },
+    }
   );
   return parseInt(ans?.result ?? '0x0', 16);
 }

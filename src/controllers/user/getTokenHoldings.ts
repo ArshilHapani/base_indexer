@@ -1,7 +1,6 @@
 import type { Request, Response } from 'express';
 import axios from 'axios';
 
-import { hexToNumber } from '@/utils/helpers';
 import getOrSetCacheRedis from '@/utils/helpers/getOrSetRedisCache';
 import { getTokenMetadata } from '@/utils/helpers/rpcCalls';
 
@@ -20,21 +19,24 @@ export default async function getTokenHoldings(req: Request, res: Response) {
             jsonrpc: '2.0',
             method: 'alchemy_getTokenBalances',
             params: [address],
-          },
+          }
         );
         return status === 200 ? data.result : [];
-      },
+      }
     );
     const tokensWithMetadata = await Promise.all(
       data.tokenBalances.map(async function (item: any) {
         const metadata = await getTokenMetadata(item.contractAddress);
-        const numericalBalance = hexToNumber(item.tokenBalance).toString();
+        const numericalBalance = parseInt(
+          item.tokenBalance ?? '0x',
+          16
+        ).toString();
         return {
           ...item,
           tokenBalance: numericalBalance,
           metadata,
         };
-      }),
+      })
     );
 
     res.json({
