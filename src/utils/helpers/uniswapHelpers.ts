@@ -15,7 +15,7 @@ import {
   uniswapV3FactoryAddressBase,
   uniswapV3PoolABI,
 } from '@/utils/constants';
-import { provider } from '@/utils/helpers';
+import provider from '../ethers';
 
 type LiquidityData = {
   message: string;

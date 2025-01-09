@@ -13,7 +13,7 @@ APP_IMAGE=defi-backend:latest
 APP_PORT=5000
 MANAGER_PORT=5010
 
-.PHONY: setup-server start-redis-server start-postgres-server start-server stress-test-ab stress-test-k6 build-image start-container push-image
+.PHONY: setup-server start-redis-server start-postgres-server start-server stress-test-ab stress-test-k6 build-image start-container push-image worker-tokenConsumer schedule-cron start-task-manager start-consumer-via-manager start-cron-via-manager
 
 setup-server:
 	@bun install
@@ -42,9 +42,14 @@ start-postgres-server:
 start-server:
 	@docker container rm -f $(REDIS_CONTAINER) || true
 	@$(MAKE) start-redis-server
-	@$(MAKE) start-postgres-server
+	@$(MAKE) start-postgres-server	
 	@bun start
+	@if [ -n "$(STUDIO)" ]; then \
+		$(MAKE) prisma-studio; \
+	fi
 
+prisma-studio:
+	@bunx prisma studio
 
 stress-test-ab:
 	@ab -n 5000 -c 500 http://localhost:5000/api/v1/tokens/0xca4569949699d56e1834efe9f58747ca0f151b01

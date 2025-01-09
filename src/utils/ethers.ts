@@ -1,14 +1,15 @@
 import { ethers } from 'ethers';
 
-let provider: ethers.JsonRpcProvider | null = null;
+let providerInstance: ethers.JsonRpcProvider | null = null;
 
 const getProvider = (): ethers.JsonRpcProvider => {
-  if (!provider) {
-    provider = new ethers.JsonRpcProvider(
-      process.env.MAINNET_BASE_ALCHEMY_RPC_URL!,
+  if (!providerInstance) {
+    providerInstance = new ethers.JsonRpcProvider(
+      process.env.MAINNET_BASE_ALCHEMY_RPC_URL!
     );
   }
-  return provider;
+  return providerInstance;
 };
 
-export default getProvider;
+const provider = getProvider();
+export default provider;

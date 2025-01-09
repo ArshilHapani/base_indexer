@@ -7,11 +7,9 @@ import { ethers } from 'ethers';
 
 import getOrSetCacheRedis from './getOrSetRedisCache';
 import { getTokenMetadata, getTransactionCount } from './rpcCalls';
-import getProvider from '../ethers';
+import provider from '../ethers';
 import { tokenABI } from '../constants';
 import type { Pool, Token } from '../types/external';
-
-export const provider = getProvider();
 
 export async function getTokenDataFromLiquidityPoolRes(
   apiRes: Pool[]

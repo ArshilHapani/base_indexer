@@ -8,3 +8,5 @@ import { WebSocket } from 'ws';
 export const tokens: Token[] = [];
 
 export const sendedTokens = new Map<WebSocket, Set<string>>();
+
+export const channels = new Map<string, Set<WebSocket>>();

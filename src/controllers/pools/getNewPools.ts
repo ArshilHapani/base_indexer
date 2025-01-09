@@ -10,10 +10,10 @@ export default async function getNewPools(req: Request, res: Response) {
 
     const data = await getOrSetCacheRedis(
       `liquidity-pools-${page ?? 1}-${chain ?? 'base'}`,
-      () => getLiquidityPools(chain?.toString(), page?.toString()),
+      () => getLiquidityPools(chain?.toString(), page?.toString())
     );
     const parsed = await Promise.all(
-      data.data.map(async (pool: any) => {
+      data.map(async (pool) => {
         const baseToken =
           pool.relationships.base_token.data.id.split('base_')[1];
         const quoteToken =
@@ -38,7 +38,7 @@ export default async function getNewPools(req: Request, res: Response) {
             pool.attributes.base_token_price_native_currency,
           ...pool,
         };
-      }),
+      })
     );
     res.status(200).json({
       message: `Fetched ${parsed.length} new pools`,
