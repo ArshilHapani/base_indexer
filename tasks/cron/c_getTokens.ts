@@ -53,7 +53,6 @@ async function job() {
   };
   // publishing to the channel
   wsClient.send(JSON.stringify(publishDataToChannel));
-  // reset cache
 
   const workerData = latestTokens.map((token) => ({
     address: token.address ?? ethers.ZeroAddress,
@@ -69,6 +68,7 @@ async function job() {
     skipDuplicates: true,
   });
 
+  // reset cache
   await client?.del('latestTokensCron'); // removes the old cache
   await client?.set('latestTokensCron', JSON.stringify(filteredTokens));
 

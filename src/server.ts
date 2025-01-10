@@ -29,4 +29,4 @@ const server = app.listen(PORT, () => {
   console.log(`Swagger is running on http://localhost:${PORT}/api-docs`);
 });
 
-initWebSocket(server);
+export const wss = initWebSocket(server);

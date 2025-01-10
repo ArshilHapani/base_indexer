@@ -7,7 +7,10 @@ import {
   subscribeToChannel,
   unsubscribeFromChannel,
 } from '../utils/channels';
-import { handleLatestTokensChannel } from './controllers/handleInitialChannelConnection';
+import {
+  handleLatestPoolChannel,
+  handleLatestTokensChannel,
+} from './controllers/handleInitialChannelConnection';
 import type { WsMessage } from '..';
 
 type WsMessagePayload = Token[] | undefined;
@@ -31,13 +34,18 @@ export default async function handleMessage(
       case 'subscribeToChannel':
         subscribeToChannel(ws, channel);
         if (channel === 'latestTokens') handleLatestTokensChannel(ws); // sending latest tokens on initial connection to the connected client
+        if (channel === 'latestPools') handleLatestPoolChannel(ws); // sending latest pools on initial connection to the connected client
         break;
       case 'unsubscribeFromChannel':
         unsubscribeFromChannel(ws, channel);
         break;
       default:
         ws.send(
-          JSON.stringify({ type: 'error', payload: 'Invalid message type' })
+          JSON.stringify({
+            type: 'error',
+            payload:
+              'Invalid message format, available message types: createChannel, publishToChannel, subscribeToChannel, unsubscribeFromChannel',
+          })
         );
         break;
     }
@@ -46,7 +54,8 @@ export default async function handleMessage(
     ws.send(
       JSON.stringify({
         type: 'error',
-        payload: 'Invalid message format',
+        payload:
+          'Invalid message format, available message types: createChannel, publishToChannel, subscribeToChannel, unsubscribeFromChannel',
       })
     );
   }

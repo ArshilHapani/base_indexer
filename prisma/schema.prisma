@@ -21,9 +21,10 @@ model Token {
 
 model Pool {
   id                Int    @id @default(autoincrement())
-  baseTokenAddress  String
-  quoteTokenAddress String
+  baseTokenAddress  String @db.VarChar(42)
+  quoteTokenAddress String @db.VarChar(42)
   chainId           Int
+  pairAddress       String @unique @db.VarChar(42)
 }
 
 model User {

@@ -9,7 +9,7 @@
     "node:run": "tsx src/server.ts",
     "worker:tokenConsumer": "bun run --watch ./tasks/workers/tokenConsumer.ts",
     "cron:getTokens": "bun run --watch ./tasks/cron/c_getTokens.ts",
-    "start-manager":"bun run --watch ./tasks/manager.ts"
+    "start-manager": "bun run --watch ./tasks/manager.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -40,6 +40,7 @@
     "redis": "^4.7.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "viem": "^2.22.6",
     "ws": "^8.18.0",
     "yamljs": "^0.3.0"
   }

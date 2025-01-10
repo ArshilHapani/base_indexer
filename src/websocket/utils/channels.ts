@@ -23,6 +23,7 @@ export function subscribeToChannel(ws: WebSocket, name: string) {
     createChannel(name);
   }
   channels.get(name)?.add(ws);
+  ws.send(JSON.stringify({ type: `channel:${name}-subscribed` }));
   console.log(`Subscribed to ${name}`);
 }
 
@@ -39,6 +40,7 @@ export function unsubscribeFromChannel(ws: WebSocket, name: string) {
     if (channels.get(name)!.size === 0) {
       channels.delete(name);
     }
+    ws.send(JSON.stringify({ type: `channel:${name}-unsubscribed` }));
 
     console.log(`Unsubscribed from ${name}`);
   }

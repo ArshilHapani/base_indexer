@@ -9,7 +9,8 @@ import getOrSetCacheRedis from './getOrSetRedisCache';
 import { getTokenMetadata, getTransactionCount } from './rpcCalls';
 import provider from '../ethers';
 import { tokenABI } from '../constants';
-import type { Pool, Token } from '../types/external';
+import type { Pool, RequiredPoolData, Token } from '../types/external';
+import { calculateAgeFromDate } from '..';
 
 export async function getTokenDataFromLiquidityPoolRes(
   apiRes: Pool[]
@@ -89,6 +90,26 @@ export async function getTokenHolders(token: string, chainId?: number) {
       });
       if (status == 429) throw new Error('Rate limit exceeded');
       return status === 200 ? data : [];
+    }
+  );
+}
+
+export async function getTokenHoldersCount(token: string, chainId?: number) {
+  // 10ms timeout
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  if (!chainId) chainId = 8453;
+  return await getOrSetCacheRedis(
+    `token-holders-count-${token}-${chainId}`,
+    async function () {
+      const url = `https://api.chainbase.online/v1/token/top-holders?contract_address=${token}&chain_id=${chainId}`;
+      const { data, status } = await axios.get(url, {
+        headers: {
+          'x-api-key': process.env.CHAINBASE_API_KEY!,
+        },
+      });
+
+      if (status == 429) throw new Error('Rate limit exceeded');
+      return status === 200 ? data.count : 0;
     }
   );
 }
@@ -180,4 +201,62 @@ export async function getLatestTokens() {
   const pools = await getLiquidityPools('base');
   const latestTokens = await getTokenDataFromLiquidityPoolRes(pools);
   return latestTokens;
+}
+
+export async function getLatestPools(
+  chain?: string,
+  page?: string
+): Promise<RequiredPoolData[]> {
+  try {
+    const pools = await getLiquidityPools(chain, page);
+    return await Promise.all(
+      pools.map(async (pool) => {
+        const baseTokenAddress =
+          pool.relationships.base_token.data.id.split('base_')[1];
+        const quoteTokenAddress =
+          pool.relationships.quote_token.data.id.split('base_')[1];
+        const tokenMetadata = await getTokenMetadata(baseTokenAddress);
+        const rateLimitReached = true; // flag to used for development
+        const tokenHolderCount = rateLimitReached
+          ? 0
+          : await getTokenHoldersCount(baseTokenAddress, 8453);
+        return {
+          pairAddress: pool.attributes.address,
+          quoteTokenAddress,
+          baseTokenInfo: {
+            age: calculateAgeFromDate(pool.attributes.pool_created_at),
+            address: baseTokenAddress,
+            name: pool.attributes.name.split(' /')[0],
+            decimals: tokenMetadata.decimals ?? 0,
+            symbol: tokenMetadata.symbol ?? '',
+            liquidityInUSD: pool.attributes.reserve_in_usd ?? '0',
+            logo: tokenMetadata.logo ?? '',
+            holdersCount: tokenHolderCount,
+            tx24h:
+              pool.attributes.transactions.h24.buys ??
+              0 + pool.attributes.transactions.h24.sells ??
+              0,
+            volume24h: pool.attributes.volume_usd.h24 ?? '0',
+          },
+          audit: {
+            insiders: 0,
+            isHoneyPot: false,
+            isVerified: true,
+            locked: false,
+            renounced: false,
+          },
+          priceInfo: {
+            priceChange1h: pool.attributes.price_change_percentage.h1,
+            priceChange24h: pool.attributes.price_change_percentage.h24,
+            priceChange5m: pool.attributes.price_change_percentage.m5,
+            priceChange6h: pool.attributes.price_change_percentage.h6,
+            priceUSDC: pool.attributes.base_token_price_usd,
+          },
+        } satisfies RequiredPoolData;
+      })
+    );
+  } catch (e: any) {
+    console.log('error at getLatestPools', e.message);
+    return [];
+  }
 }

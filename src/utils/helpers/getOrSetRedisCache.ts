@@ -21,7 +21,7 @@ export default async function getOrSetCacheRedis<T>(
   key: string,
   cb: () => Promise<T>,
   expirySeconds: number = 900,
-  disableCache = false /** For testing */,
+  disableCache = false /** For testing */
 ): Promise<T> {
   if (disableCache) {
     return cb();
@@ -40,6 +40,10 @@ export default async function getOrSetCacheRedis<T>(
     }
 
     const freshData = await cb();
+    if (Array.isArray(freshData) && freshData.length === 0) {
+      return freshData;
+    }
+
     if (SHOW_CACHE_LOGS)
       console.log("Cache miss for key: '\x1b[31m%s\x1b[0m'", key);
 
