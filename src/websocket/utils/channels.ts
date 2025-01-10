@@ -1,12 +1,13 @@
 import WebSocket from 'ws';
 
 import { channels } from '../state';
+import type { WsMessage } from '..';
 
 /**
  *
  * @param name The name of the channel
  */
-export function createChannel(name: string) {
+export function createChannel(name: WsMessage['channel']) {
   if (!channels.has(name)) {
     channels.set(name, new Set());
     console.log(`Created channel ${name}`);
@@ -18,7 +19,7 @@ export function createChannel(name: string) {
  * @param ws WebSocket instance
  * @param name Name of the channel
  */
-export function subscribeToChannel(ws: WebSocket, name: string) {
+export function subscribeToChannel(ws: WebSocket, name: WsMessage['channel']) {
   if (!channels.has(name)) {
     createChannel(name);
   }
@@ -32,7 +33,10 @@ export function subscribeToChannel(ws: WebSocket, name: string) {
  * @param ws WebSocket instance
  * @param name Name of the channel
  */
-export function unsubscribeFromChannel(ws: WebSocket, name: string) {
+export function unsubscribeFromChannel(
+  ws: WebSocket,
+  name: WsMessage['channel']
+) {
   if (channels.has(name)) {
     channels.get(name)!.delete(ws);
 
@@ -51,7 +55,10 @@ export function unsubscribeFromChannel(ws: WebSocket, name: string) {
  * @param name Then ame of the channel
  * @param message Message (by default it's any)
  */
-export function publishToChannel<T = any>(name: string, message: T) {
+export function publishToChannel<T = any>(
+  name: WsMessage['channel'],
+  message: T
+) {
   if (channels.has(name)) {
     const channel = channels.get(name)!;
     channel.forEach((ws) => {

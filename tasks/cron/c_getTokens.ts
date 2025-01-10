@@ -11,7 +11,6 @@ import client from '@/utils/redis';
 import type { WsMessage } from '@/websocket';
 
 const CRONE_SCHEDULE_MINUTE = process.env.CRONE_SCHEDULE_MINUTE ?? '5';
-const CHANNEL_NAME = 'latestTokens';
 
 const wsClient = new Websocket(
   process.env.WEBSOCKET_SERVER_URL ?? 'ws://localhost:5010'
@@ -41,7 +40,7 @@ async function job() {
   const createChannelData: WsMessage = {
     payload: null,
     type: 'createChannel',
-    channel: CHANNEL_NAME,
+    channel: 'latestTokens',
   };
   // creating a channel
   wsClient.send(JSON.stringify(createChannelData));
@@ -49,7 +48,7 @@ async function job() {
   const publishDataToChannel: WsMessage = {
     payload: filteredTokens,
     type: 'publishToChannel',
-    channel: CHANNEL_NAME,
+    channel: 'latestTokens',
   };
   // publishing to the channel
   wsClient.send(JSON.stringify(publishDataToChannel));

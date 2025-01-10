@@ -65,41 +65,43 @@ function getLogs(taskName: TaskNames): string {
   return logs[taskName].join('\n') || `No logs for task ${taskName}`;
 }
 
-try {
-  serve({
-    port: process.env.MANAGER_PORT ?? 5010,
-    fetch(request) {
-      const url = new URL(request.url);
-      const taskName = url.searchParams.get('task') as TaskNames;
-      const command = url.pathname.slice(1) as
-        | 'start'
-        | 'stop'
-        | 'status'
-        | 'logs';
+function main() {
+  try {
+    serve({
+      port: process.env.MANAGER_PORT ?? 5010,
+      fetch(request) {
+        const url = new URL(request.url);
+        const taskName = url.searchParams.get('task') as TaskNames;
+        const command = url.pathname.slice(1) as
+          | 'start'
+          | 'stop'
+          | 'status'
+          | 'logs';
 
-      if (!taskName || !['consumer', 'cron'].includes(taskName)) {
-        return new Response("Invalid task name. Use 'consumer' or 'cron'.", {
-          status: 400,
-        });
-      }
-      switch (command) {
-        case 'start':
-          return new Response(startTask(taskName, `${taskName}.ts`));
-        case 'stop':
-          return new Response(stopProcess(taskName));
-        case 'status':
-          return new Response(getStatus(taskName));
-        case 'logs':
-          return new Response(getLogs(taskName));
-        default:
-          return new Response(
-            'Invalid endpoint. Use /start, /stop, /status, or /logs.',
-            { status: 404 }
-          );
-      }
-    },
-  });
-  console.log('Manager is running on http://localhost:3050');
-} catch (e) {
-  console.error(e);
+        if (!taskName || !['consumer', 'cron'].includes(taskName)) {
+          return new Response("Invalid task name. Use 'consumer' or 'cron'.", {
+            status: 400,
+          });
+        }
+        switch (command) {
+          case 'start':
+            return new Response(startTask(taskName, `${taskName}.ts`));
+          case 'stop':
+            return new Response(stopProcess(taskName));
+          case 'status':
+            return new Response(getStatus(taskName));
+          case 'logs':
+            return new Response(getLogs(taskName));
+          default:
+            return new Response(
+              'Invalid endpoint. Use /start, /stop, /status, or /logs.',
+              { status: 404 }
+            );
+        }
+      },
+    });
+    console.log('Manager is running on http://localhost:3050');
+  } catch (e) {
+    console.error(e);
+  }
 }

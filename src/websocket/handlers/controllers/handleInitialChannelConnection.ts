@@ -4,10 +4,13 @@
 
 import type { WebSocket } from 'ws';
 
+import { spawnProcess } from '#/tasks';
 import { getLatestPools, getLatestTokens } from '@/utils/helpers';
 import client from '@/utils/redis';
 
 export async function handleLatestTokensChannel(ws: WebSocket) {
+  spawnProcess('tasks/cron/c_getTokens.ts', 'latestTokens'); // spawns the cron job to fetch the latest tokens
+
   try {
     const redisCachedTokens = await client?.get('latestTokensCron'); // this is the same key which is used in `c_getTokens.ts`
     const parsedTokens = JSON.parse(redisCachedTokens ?? '[]');
@@ -45,6 +48,8 @@ export async function handleLatestTokensChannel(ws: WebSocket) {
 }
 
 export async function handleLatestPoolChannel(ws: WebSocket) {
+  spawnProcess('tasks/cron/c_getLatestPools.ts', 'latestPools'); // spawns the cron job to fetch the
+
   try {
     const redisCachedPools = await client?.get('latestPoolsCron'); // this is the same key which is used in `c_getLatestPools.ts`
     const parsedPools = JSON.parse(redisCachedPools ?? '[]');

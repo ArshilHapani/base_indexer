@@ -27,7 +27,7 @@ export type WsMessage<T = any> = {
     | 'subscribeToChannel'
     | 'unsubscribeFromChannel'
     | 'publishToChannel';
-  channel: string;
+  channel: 'latestTokens' | 'latestPools';
 };
 
 export interface WsContext {
