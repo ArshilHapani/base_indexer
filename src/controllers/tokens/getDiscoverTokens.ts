@@ -7,7 +7,12 @@ export default async function getDiscoverTokens(req: Request, res: Response) {
   try {
     const data = await getOrSetCacheRedis('discover-token', async function () {
       const { data, status } = await axios.get(
-        'https://api.mobula.io/api/1/metadata/trendings'
+        'https://api.mobula.io/api/1/metadata/trendings',
+        {
+          headers: {
+            Authorization: process.env.MOBULA_API_KEY,
+          },
+        }
       );
       return status === 200 ? data : [];
     });

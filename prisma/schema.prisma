@@ -31,3 +31,12 @@ model User {
   id      Int    @id @default(autoincrement())
   address String @unique
 }
+
+model Pair {
+  id          Int      @id @default(autoincrement())
+  tokenA      String   @db.VarChar(42)
+  tokenB      String   @db.VarChar(42)
+  chainId     Int
+  pairAddress String   @unique @db.VarChar(42)
+  createdAt   DateTime
+}

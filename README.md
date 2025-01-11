@@ -55,33 +55,3 @@ The separate tasks are stored in `tasks` directory which needs to manage manuall
   }
 }
 ```
-
-# REST API Common response:
-
-```json
-{
-  "success": true,
-  "message": "Success",
-  "data": ...
-}
-```
-
-# Websocket Common response:
-
-```json
-{
-  "message": "Success",
-  "payload": ...
-}
-```
-
-# Websocket common request format:
-
-```json
-{
-  "type": "subscribe",
-  "payload": {
-    "channel": "channel_name"
-  }
-}
-```

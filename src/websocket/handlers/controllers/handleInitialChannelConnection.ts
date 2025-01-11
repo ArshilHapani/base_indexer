@@ -21,7 +21,7 @@ export async function handleLatestTokensChannel(ws: WebSocket) {
     ) {
       ws.send(
         JSON.stringify({
-          type: 'latestTokens-response',
+          type: 'latestTokens-initial-response',
           payload: parsedTokens,
         })
       );
@@ -31,7 +31,7 @@ export async function handleLatestTokensChannel(ws: WebSocket) {
       await client?.set('latestTokensCron', JSON.stringify(latestTokens)); // sets the cache for other clients
       ws.send(
         JSON.stringify({
-          type: 'latestTokens-response',
+          type: 'latestTokens-initial-response',
           payload: latestTokens,
         })
       );
@@ -60,7 +60,7 @@ export async function handleLatestPoolChannel(ws: WebSocket) {
     ) {
       ws.send(
         JSON.stringify({
-          type: 'latestPools-response',
+          type: 'latestPools-initial-response',
           payload: parsedPools,
         })
       );
@@ -70,7 +70,7 @@ export async function handleLatestPoolChannel(ws: WebSocket) {
       await client?.set('latestPoolsCron', JSON.stringify(latestPools)); // sets the cache for other clients
       ws.send(
         JSON.stringify({
-          type: 'latestPools-response',
+          type: 'latestPools-initial-response',
           payload: latestPools,
         })
       );
@@ -81,6 +81,44 @@ export async function handleLatestPoolChannel(ws: WebSocket) {
       JSON.stringify({
         type: 'error',
         payload: 'Error in handleLatestPoolChannel',
+      })
+    );
+  }
+}
+
+export async function handleTrendingPoolsChannel(ws: WebSocket) {
+  spawnProcess('tasks/cron/c_getTrendingPools.ts', 'trendingPools');
+
+  try {
+    const redisCachedPools = await client?.get('trendingPoolsCron');
+    const parsedPools = JSON.parse(redisCachedPools ?? '[]');
+    if (
+      ws.readyState === ws.OPEN &&
+      redisCachedPools &&
+      parsedPools.length > 0
+    ) {
+      ws.send(
+        JSON.stringify({
+          type: 'trendingPools-initial-response',
+          payload: parsedPools,
+        })
+      );
+    } else {
+      const trendingPools = await getLatestPools('trending');
+      await client?.set('trendingPoolsCron', JSON.stringify(trendingPools));
+      ws.send(
+        JSON.stringify({
+          type: 'trendingPools-initial-response',
+          payload: trendingPools,
+        })
+      );
+    }
+  } catch (e: any) {
+    console.log(`Error in handleTrendingPoolsChannel: ${e.message}`);
+    ws.send(
+      JSON.stringify({
+        type: 'error',
+        payload: 'Error in handleTrendingPoolsChannel',
       })
     );
   }

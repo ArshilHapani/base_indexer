@@ -1,18 +1,15 @@
 import { spawn, type Subprocess } from 'bun';
 
-import type { WsMessage } from '@/websocket';
+import type { ChannelTypes } from '@/websocket';
 
-export const tasks = new Map<WsMessage['channel'], Subprocess>();
+const tasks = new Map<ChannelTypes, Subprocess>();
 
 /**
  * This function is used to run the specific cron job which are stored in `tasks/cron` directory
  * @param filePath - the path of the file which needs to be run
  * @param processName - the name of the process which is running (it is the same as the channel name)
  */
-export function spawnProcess(
-  filePath: string,
-  processName: WsMessage['channel']
-) {
+export function spawnProcess(filePath: string, processName: ChannelTypes) {
   try {
     if (tasks.has(processName)) {
       console.log(`Process ${processName} is already running`);
@@ -29,7 +26,7 @@ export function spawnProcess(
   }
 }
 
-export function killProcess(processName: WsMessage['channel']) {
+export function killProcess(processName: ChannelTypes) {
   const process = tasks.get(processName);
   if (!process) {
     console.log(`Process ${processName} is not running`);

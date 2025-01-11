@@ -18,6 +18,10 @@ export interface Token {
   poolCreatedAt: string;
   transactionCount: number;
 }
+
+/**
+ * Gecko terminal response
+ */
 export type Pool = {
   id: string;
   type: string;
@@ -101,34 +105,80 @@ export type Pool = {
   };
 };
 
-export interface RequiredPoolData {
-  pairAddress: string;
-  quoteTokenAddress: string;
-  baseTokenInfo: {
-    address: string;
+type MobulaToken = {
+  address: string;
+  price?: number;
+  priceToken: number;
+  priceTokenString: string;
+  logo?: string;
+  approximateReserveUSD: number;
+  approximateReserveTokenRaw: string;
+  approximateReserveToken: number;
+  symbol: string;
+  name: string;
+  id?: number;
+  decimals: number;
+  totalSupply?: number;
+  circulatingSupply?: number;
+};
+
+type MobulaPair = {
+  token0: MobulaToken;
+  token1: MobulaToken;
+  volume24h: number;
+  liquidity: number;
+  blockchain: string;
+  address: string;
+  type: string;
+  baseToken: string;
+  factory: string;
+  quoteToken: string;
+  price_change_5min: number;
+  price_change_1h: number;
+  price_change_4h: number;
+  price_change_12h: number;
+  price_change_24h: number;
+  trades_5min: number;
+  buys_5min: number;
+  sells_5min: number;
+  volume_5min: number;
+  buy_volume_5min: number;
+  sell_volume_5min: number;
+  trades_1h: number;
+  buys_1h: number;
+  sells_1h: number;
+  volume_1h: number;
+  buy_volume_1h: number;
+  sell_volume_1h: number;
+  trades_4h: number;
+  buys_4h: number;
+  sells_4h: number;
+  volume_4h: number;
+  buy_volume_4h: number;
+  sell_volume_4h: number;
+  trades_12h: number;
+  buys_12h: number;
+  sells_12h: number;
+  volume_12h: number;
+  buy_volume_12h: number;
+  sell_volume_12h: number;
+  trades_24h: number;
+  buys_24h: number;
+  sells_24h: number;
+  volume_24h: number;
+  buy_volume_24h: number;
+  sell_volume_24h: number;
+};
+
+export type MobulaAPIPoolType = {
+  data: {
     name: string;
     symbol: string;
+    address: string;
+    blockchain: string;
     decimals: number;
-    logo: string;
-    liquidityInUSD: string;
-    holdersCount: number;
-    tx24h: number;
-    volume24h: string;
-    age: string;
-  };
-  priceInfo: {
-    priceUSDC: string;
-    priceChange5m: string;
-    priceChange1h: string;
-    priceChange6h: string;
-    priceChange24h: string;
-  };
-  audit: {
-    isHoneyPot: boolean;
-    isVerified: boolean;
-    // remaining...
-    renounced: boolean;
-    locked: boolean;
-    insiders: number;
-  };
-}
+    volume_24h: number;
+    listed_at: string;
+    pairs: MobulaPair[];
+  }[];
+};

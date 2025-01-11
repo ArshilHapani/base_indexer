@@ -12,7 +12,7 @@ export default async function getTokenInfo(req: Request, res: Response) {
     const data = await getOrSetCacheRedis(
       `token-info-${address}`,
       () => getTokensList(address),
-      DEFAULT_CACHE_TIME,
+      DEFAULT_CACHE_TIME
     );
     if (!data.data) {
       res.status(404).json(getBaseResponse('Token not found', false));
@@ -32,6 +32,11 @@ export default async function getTokenInfo(req: Request, res: Response) {
 async function getTokensList(address: string) {
   const { data } = await axios.get(
     `https://api.mobula.io/api/1/market/data?asset=${address}&blockchain=Base`,
+    {
+      headers: {
+        Authorization: process.env.MOBULA_API_KEY,
+      },
+    }
   );
   return data;
 }

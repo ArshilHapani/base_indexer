@@ -10,7 +10,7 @@ export default async function getPairsTokenWise(req: Request, res: Response) {
 
     const data = await getOrSetCacheRedis(
       `pair-${address}-${chain ?? 'base'}`,
-      () => getPairs(address, chain?.toString()),
+      () => getPairs(address, chain?.toString())
     );
     res.json({
       message: `Fetched ${data?.data?.pairs.length} pairs for ${address}`,
@@ -27,7 +27,13 @@ export default async function getPairsTokenWise(req: Request, res: Response) {
 }
 
 async function getPairs(address: string, chain?: string) {
-  const url = `https://api.mobula.io/api/1/market/pairs?asset=${address.toString()}&blockchain=${chain?.toString().toLowerCase() ?? 'base'}`;
-  const { data } = await axios.get(url);
+  const url = `https://api.mobula.io/api/1/market/pairs?asset=${address.toString()}&blockchain=${
+    chain?.toString().toLowerCase() ?? 'base'
+  }`;
+  const { data } = await axios.get(url, {
+    headers: {
+      Authorization: process.env.MOBULA_API_KEY,
+    },
+  });
   return data;
 }

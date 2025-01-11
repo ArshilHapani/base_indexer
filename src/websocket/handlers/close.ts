@@ -2,23 +2,22 @@ import type { WebSocket, WebSocketServer } from 'ws';
 
 import { channels } from '../state';
 import { killProcess } from '#/tasks';
-import type { WsMessage } from '..';
+import type { ChannelTypes } from '..';
 
 export default function handleClose(ws: WebSocket, wss: WebSocketServer) {
   ws.close();
 
   // manually close the channel and kill the process for each channel
-  const poolChannel = channels.get('latestPools');
-  const tokenChannel = channels.get('latestTokens');
-  clearProcessesAndResource(poolChannel, 'latestPools', ws);
-  clearProcessesAndResource(tokenChannel, 'latestTokens', ws);
+  channels.entries().forEach(([name, channels]) => {
+    clearProcessesAndResource(channels, name, ws);
+  });
 
   console.log('Client disconnected');
 }
 
 function clearProcessesAndResource(
   channel: Set<WebSocket> | undefined,
-  name: WsMessage['channel'],
+  name: ChannelTypes,
   ws: WebSocket
 ) {
   if (channel) {

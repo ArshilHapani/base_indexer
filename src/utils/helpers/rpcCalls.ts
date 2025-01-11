@@ -7,7 +7,10 @@ import axios from 'axios';
 import getOrSetCacheRedis from './getOrSetRedisCache';
 import { getTotalSupply } from '.';
 
-export async function getTokenMetadata(address: string): Promise<{
+export async function getTokenMetadata(
+  address: string,
+  notRequireTotalSupply?: boolean
+): Promise<{
   decimals: number | null;
   logo: string | null;
   name: string | null;
@@ -25,6 +28,13 @@ export async function getTokenMetadata(address: string): Promise<{
           params: [address],
         }
       );
+      if (notRequireTotalSupply) {
+        return {
+          ...data.result,
+          totalSupply: null,
+        };
+      }
+
       const totalSupply = await getTotalSupply(address);
       return {
         ...data.result,

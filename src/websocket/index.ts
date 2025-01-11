@@ -20,6 +20,12 @@ export default function initWebSocket(server: Server) {
 ///////////////////// TYPES /////////////////////
 //////////////////////////////////////////////////
 
+export type ChannelTypes =
+  | 'latestTokens'
+  | 'latestPools'
+  | 'trendingPools'
+  | 'latestPairs';
+
 export type WsMessage<T = any> = {
   payload: T;
   type:
@@ -27,7 +33,7 @@ export type WsMessage<T = any> = {
     | 'subscribeToChannel'
     | 'unsubscribeFromChannel'
     | 'publishToChannel';
-  channel: 'latestTokens' | 'latestPools';
+  channel: ChannelTypes;
 };
 
 export interface WsContext {
