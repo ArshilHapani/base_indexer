@@ -7,6 +7,10 @@ import type { WebSocket } from 'ws';
 import { spawnProcess } from '#/tasks';
 import { getLatestPools, getLatestTokens } from '@/utils/helpers';
 import client from '@/utils/redis';
+import type { WsMessage } from '@/websocket';
+import db from '@/utils/db';
+import getPairDataByAddress from '@/utils/helpers/getPairDataByAddress';
+import type { Address } from 'viem';
 
 export async function handleLatestTokensChannel(ws: WebSocket) {
   spawnProcess('tasks/cron/c_getTokens.ts', 'latestTokens'); // spawns the cron job to fetch the latest tokens
@@ -88,7 +92,6 @@ export async function handleLatestPoolChannel(ws: WebSocket) {
 
 export async function handleTrendingPoolsChannel(ws: WebSocket) {
   spawnProcess('tasks/cron/c_getTrendingPools.ts', 'trendingPools');
-
   try {
     const redisCachedPools = await client?.get('trendingPoolsCron');
     const parsedPools = JSON.parse(redisCachedPools ?? '[]');
@@ -119,6 +122,58 @@ export async function handleTrendingPoolsChannel(ws: WebSocket) {
       JSON.stringify({
         type: 'error',
         payload: 'Error in handleTrendingPoolsChannel',
+      })
+    );
+  }
+}
+
+export async function handleLatestPairChannel(ws: WebSocket) {
+  spawnProcess('tasks/listeners/latestCreatedPairs.ts', 'latestPairs');
+  try {
+    const cache = await client?.get('latestPairTask');
+    if (cache) {
+      const wsData: WsMessage = {
+        channel: 'latestPairs',
+        payload: JSON.parse(cache),
+        type: 'publishToChannel',
+      };
+      ws.send(JSON.stringify(wsData));
+    } else {
+      const latestData = await db.pair.findMany({
+        take: 20,
+        select: {
+          pairAddress: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      const freshData = await Promise.all(
+        latestData.map(async function ({ pairAddress, createdAt }) {
+          const pairInfo = await getPairDataByAddress(
+            pairAddress as Address,
+            createdAt.toISOString()
+          );
+          return pairInfo;
+        })
+      );
+      const wsData: WsMessage = {
+        channel: 'latestPairs',
+        payload: freshData,
+        type: 'publishToChannel',
+      };
+      ws.send(JSON.stringify(wsData));
+
+      await client?.set('latestPairTask', JSON.stringify(freshData));
+    }
+  } catch (error: any) {
+    console.log(`Error in "handleLatestPairChannel" ${error.message}`);
+    ws.send(
+      JSON.stringify({
+        type: 'error',
+        payload: 'Error in "handleLatestPairChannel"',
       })
     );
   }

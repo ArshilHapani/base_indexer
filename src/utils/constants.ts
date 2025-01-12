@@ -1,7 +1,9 @@
 export const DEFAULT_CACHE_TIME =
   process.env.NODE_ENV === 'development' ? 60 * 60 * 3 /** 3 hours */ : 60 * 60; // 1 hour
 
-export const WETH_ADDRESS = '0x4200000000000000000000000000000000000006';
+export const WETH_ADDRESS_BASE = '0x4200000000000000000000000000000000000006';
+export const V3_WETH_USD_POOL_ADDRESS =
+  '0xd0b53D9277642d899DF5C87A3966A349A798F224';
 
 /**
  * Basic abi to get call the balanceOf and other function on smart contract

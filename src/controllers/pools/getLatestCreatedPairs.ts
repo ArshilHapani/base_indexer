@@ -5,6 +5,7 @@ import getOrSetCacheRedis from '@/utils/helpers/getOrSetRedisCache';
 import { calculateAgeFromDate } from '@/utils';
 import type { MobulaAPIPoolType } from '@/utils/types/external';
 import type { RequiredPoolData } from '@/utils/types/wsResponses';
+import { getHoldersCountViem } from '@/utils/helpers';
 
 export default async function getLatestCreatedPairs(
   req: Request,
@@ -40,37 +41,40 @@ async function getLatestPairs(chain?: string): Promise<RequiredPoolData[]> {
   });
   return status !== 200
     ? []
-    : data.data.map((pair) => {
-        const tokenPair = pair.pairs[0];
-        return {
-          pairAddress: pair.address,
-          quoteTokenAddress: tokenPair.quoteToken,
-          baseTokenInfo: {
-            address: tokenPair.baseToken,
-            age: calculateAgeFromDate(pair.listed_at),
-            decimals: tokenPair.token0.decimals,
-            holdersCount: 0, // TODO
-            liquidityInUSD: tokenPair.liquidity.toString(),
-            logo: tokenPair.token0.logo ?? '',
-            name: tokenPair.token0.name,
-            symbol: tokenPair.token0.symbol,
-            tx24h: tokenPair.trades_24h,
-            volume24h: tokenPair.volume_24h.toString(),
-          },
-          priceInfo: {
-            priceUSDC: tokenPair.price_change_24h.toString(),
-            priceChange5m: tokenPair.price_change_5min.toString(),
-            priceChange1h: tokenPair.price_change_1h.toString(),
-            priceChange6h: tokenPair.price_change_4h.toString(),
-            priceChange24h: tokenPair.price_change_12h.toString(),
-          },
-          audit: {
-            insiders: 0,
-            isHoneyPot: false,
-            isVerified: true,
-            locked: false,
-            renounced: false,
-          },
-        };
-      });
+    : await Promise.all(
+        data.data.map(async (pair) => {
+          const tokenPair = pair.pairs[0];
+          return {
+            pairAddress: pair.address,
+            quoteTokenAddress: tokenPair.quoteToken,
+            baseTokenInfo: {
+              address: tokenPair.baseToken,
+              age: calculateAgeFromDate(pair.listed_at),
+              decimals: tokenPair.token0.decimals,
+              holdersCount: await getHoldersCountViem(tokenPair.token0.address),
+              liquidityInUSD: tokenPair.liquidity.toString(),
+              logo: tokenPair.token0.logo ?? '',
+              name: tokenPair.token0.name,
+              symbol: tokenPair.token0.symbol,
+              tx24h: tokenPair.trades_24h,
+              volume24h: tokenPair.volume_24h.toString(),
+              timestamp: pair.listed_at,
+            },
+            priceInfo: {
+              priceUSDC: tokenPair.price_change_24h.toString(),
+              priceChange5m: tokenPair.price_change_5min.toString(),
+              priceChange1h: tokenPair.price_change_1h.toString(),
+              priceChange6h: tokenPair.price_change_4h.toString(),
+              priceChange24h: tokenPair.price_change_12h.toString(),
+            },
+            audit: {
+              insiders: 0,
+              isHoneyPot: false,
+              isVerified: true,
+              locked: false,
+              renounced: false,
+            },
+          };
+        })
+      );
 }

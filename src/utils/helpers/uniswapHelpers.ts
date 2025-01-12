@@ -2,7 +2,7 @@
  * @fileoverview uniswapHelpers.ts - Helper functions for interacting with Uniswap V2 and V3.
  */
 
-import { ethers } from 'ethers';
+import { zeroAddress, type Address } from 'viem';
 
 import {
   FEE,
@@ -15,7 +15,7 @@ import {
   uniswapV3FactoryAddressBase,
   uniswapV3PoolABI,
 } from '@/utils/constants';
-import provider from '../ethers';
+import viemClient from '../viem';
 
 type LiquidityData = {
   message: string;
@@ -28,26 +28,33 @@ export async function getLiquidityV2(
   from: string,
   to: string
 ): Promise<LiquidityData> {
-  const factory = new ethers.Contract(
-    uniswapV2FactoryAddress,
-    uniswapV2FactoryABI,
-    provider
-  );
-  const pairAddress = await factory.getPair(from, to);
+  const pairAddress = (await viemClient.readContract({
+    abi: uniswapV2FactoryABI,
+    address: uniswapV2FactoryAddress,
+    functionName: 'getPair',
+    args: [from, to],
+  })) as Address;
 
-  if (pairAddress === ethers.ZeroAddress) {
+  if (pairAddress === zeroAddress) {
     return {
       baseTokenValue: '0',
       quoteTokenValue: '0',
       message: 'No pool found for these tokens.',
-      poolAddress: ethers.ZeroAddress,
+      poolAddress: zeroAddress,
     };
   }
 
-  const pair = new ethers.Contract(pairAddress, uniswapV2PairABI, provider);
+  const [reserve0, reserve1] = (await viemClient.readContract({
+    abi: uniswapV2PairABI,
+    address: pairAddress,
+    functionName: 'getReserves',
+  })) as [bigint, bigint];
 
-  const [reserve0, reserve1] = await pair.getReserves();
-  const token0 = await pair.token0();
+  const token0 = await viemClient.readContract({
+    abi: uniswapV2PairABI,
+    address: pairAddress,
+    functionName: 'token0',
+  });
 
   return {
     baseTokenValue: token0 === from ? reserve0.toString() : reserve1.toString(),
@@ -60,14 +67,13 @@ export async function getLiquidityV2(
 
 export async function getLiquidityV3(from: string, to: string) {
   try {
-    const factory = new ethers.Contract(
-      uniswapV3FactoryAddressBase,
-      uniswapV3FactoryABI,
-      provider
-    );
-    const poolAddress = await factory.getPool(from, to, FEE);
-
-    if (poolAddress === ethers.ZeroAddress) {
+    const poolAddress = (await viemClient.readContract({
+      abi: uniswapV3FactoryABI,
+      address: uniswapV3FactoryAddressBase,
+      functionName: 'getPool',
+      args: [from, to, FEE],
+    })) as Address;
+    if (poolAddress === zeroAddress) {
       return {
         quote: '0',
         message: 'No pool found for these tokens.',
@@ -75,9 +81,11 @@ export async function getLiquidityV3(from: string, to: string) {
       };
     }
 
-    const pool = new ethers.Contract(poolAddress, uniswapV3PoolABI, provider);
-
-    const liquidity = await pool.liquidity();
+    const liquidity = (await viemClient.readContract({
+      abi: uniswapV3PoolABI,
+      address: poolAddress,
+      functionName: 'liquidity',
+    })) as bigint;
     return {
       quote: liquidity.toString(),
       message: 'Success',
@@ -88,7 +96,7 @@ export async function getLiquidityV3(from: string, to: string) {
     return {
       quote: '0',
       message: 'Internal Server Error',
-      poolAddress: ethers.ZeroAddress,
+      poolAddress: zeroAddress,
     };
   }
 }
@@ -106,14 +114,13 @@ export async function getQuoteV2(
   slippage: number
 ): Promise<QuoteData> {
   try {
-    const uniswapV2Router = new ethers.Contract(
-      uniswapV2RouterAddress,
-      uniswapV2RouterABI,
-      provider
-    );
-
     const path = [from, to];
-    const amountsOut = await uniswapV2Router.getAmountsOut(amountIn, path);
+    const amountsOut = (await viemClient.readContract({
+      abi: uniswapV2RouterABI,
+      address: uniswapV2RouterAddress,
+      functionName: 'getAmountsOut',
+      args: [amountIn, path],
+    })) as bigint[];
 
     const amountOut = amountsOut[1]; // The destination token amount
 

@@ -3,19 +3,15 @@
  */
 
 import axios from 'axios';
-import { ethers } from 'ethers';
-import { formatUnits, zeroAddress, type Address } from 'viem';
 
 import getOrSetCacheRedis from './getOrSetRedisCache';
 import { getTokenMetadata, getTransactionCount } from './rpcCalls';
-import provider from '../ethers';
-import { tokenABI, uniswapV2FactoryAddress, WETH_ADDRESS } from '../constants';
 import { calculateAgeFromDate } from '..';
 import viemClient from '../viem';
 import type { Pool, Token } from '../types/external';
 import type { RequiredPoolData } from '../types/wsResponses';
-import pairABI from '@/abi/V2Pair.json';
-import factoryAbi from '@/abi/V2Factory.json';
+import { getTokenPriceViem } from './priceDataHelpers';
+import v2Pair from '@/abi/V2Pair.json';
 
 export async function getTokenDataFromLiquidityPoolRes(
   apiRes: Pool[]
@@ -136,13 +132,28 @@ export async function getUserBalance({
     const data = await getOrSetCacheRedis(
       `user-balance-${user}-${token}`,
       async function () {
-        const tokenContract = new ethers.Contract(token, tokenABI, provider);
-        const rawBalance = await tokenContract.balanceOf(user);
-        const decimals = await tokenContract.decimals();
-        const balance = ethers.formatUnits(rawBalance, decimals);
+        const balanceOfFunctionSignature = '0x70a08231';
+        const decimalsFunctionSignature = '0x313ce567';
+        const balanceOfCallData = `${balanceOfFunctionSignature}${user
+          .slice(2)
+          .padStart(64, '0')}`;
+        const rawBalanceHex = await viemClient.call({
+          to: token as `0x${string}`,
+          data: balanceOfCallData as `0x${string}`,
+        });
+        const rawBalance = BigInt(rawBalanceHex.data ?? '0x');
+
+        const decimalsHex = await viemClient.call({
+          to: token as `0x${string}`,
+          data: decimalsFunctionSignature as `0x${string}`,
+        });
+        const decimals = parseInt(decimalsHex.data ?? '0x', 16);
+
+        const balance = (rawBalance / BigInt(10 ** decimals)).toString();
+
         return {
           rawBalance: rawBalance.toString(),
-          balance: balance.toString(),
+          balance,
           decimals: decimals.toString(),
         };
       }
@@ -158,37 +169,49 @@ export async function getUserBalance({
   }
 }
 
-export async function getTotalSupply(address: string): Promise<string> {
+export async function getTotalSupply(tokenAddress: string): Promise<string> {
   try {
-    const tokenContract = new ethers.Contract(address, tokenABI, provider);
+    const totalSupplyFunctionSignature = '0x18160ddd';
+    const decimalsFunctionSignature = '0x313ce567';
 
-    // Call the totalSupply function
-    const totalSupply = await tokenContract.totalSupply();
+    const totalSupplyHex = await viemClient.call({
+      to: tokenAddress as `0x${string}`,
+      data: totalSupplyFunctionSignature as `0x${string}`,
+    });
+    const totalSupply = BigInt(totalSupplyHex.data ?? '0x');
 
-    // Get the decimals of the token
-    const decimals: number = await tokenContract.decimals();
+    const decimalsHex = await viemClient.call({
+      to: tokenAddress as `0x${string}`,
+      data: decimalsFunctionSignature as `0x${string}`,
+    });
+    const decimals = parseInt(decimalsHex.data ?? '0x', 16);
 
-    // Convert totalSupply to a human-readable string
-    return ethers.formatUnits(totalSupply, decimals);
+    const formattedSupply = (totalSupply / BigInt(10 ** decimals)).toString();
+
+    return formattedSupply;
   } catch (e: any) {
-    console.log(`Error at "getTotalSupply" helper`, e.message);
+    console.error(`Error at "getTotalSupply" helper:`, e.message);
     return '0';
   }
 }
 
-export async function getTokenLaunchDate(address: string): Promise<string> {
+export async function getTokenLaunchDate(
+  tokenAddress: string
+): Promise<string> {
   try {
-    const tx = await provider.getTransactionReceipt(address);
+    const transaction = await viemClient.getTransactionReceipt({
+      hash: tokenAddress as `0x${string}`,
+    });
 
-    if (!tx) {
+    if (!transaction) {
       throw new Error(
         'Unable to fetch the transaction for the token contract.'
       );
     }
 
-    const deploymentBlock = tx.blockNumber;
+    const deploymentBlock = transaction.blockNumber;
 
-    const block = await provider.getBlock(deploymentBlock);
+    const block = await viemClient.getBlock({ blockNumber: deploymentBlock });
 
     if (!block) {
       throw new Error(
@@ -196,10 +219,10 @@ export async function getTokenLaunchDate(address: string): Promise<string> {
       );
     }
 
-    const deploymentDate = new Date(block.timestamp * 1000);
+    const deploymentDate = new Date(Number(block.timestamp) * 1000);
     return deploymentDate.toISOString();
   } catch (e: any) {
-    console.log('error at getTokenLaunchDate');
+    console.error('Error at getTokenLaunchDate:', e.message);
     return '0';
   }
 }
@@ -232,6 +255,7 @@ export async function getLatestPools(
           pairAddress: pool.attributes.address,
           quoteTokenAddress,
           baseTokenInfo: {
+            timestamp: pool.attributes.pool_created_at,
             age: calculateAgeFromDate(pool.attributes.pool_created_at),
             address: baseTokenAddress,
             name: pool.attributes.name.split(' /')[0],
@@ -278,7 +302,7 @@ export async function getLiquidityOfPairs(
 ) {
   const [reserve0, reserve1] = (await viemClient.readContract({
     address: pairAddress,
-    abi: require('@/abi/V2Pair.json'),
+    abi: v2Pair,
     functionName: 'getReserves',
     args: [],
   })) as bigint[];
@@ -324,7 +348,7 @@ export async function getTokenPrice(address: string) {
     },
   });
 
-  return (data.data.price as number) ?? 0;
+  return (data.data.price as number) ?? -1;
 }
 
 export async function get24hrVolume(pairAddress: string) {
@@ -365,6 +389,7 @@ export async function get24hrVolume(pairAddress: string) {
 }
 
 export async function getHoldersCountViem(tokenAddress: string) {
+  const startingBlock = (await viemClient.getBlockNumber()) - 10000n;
   const logs = await viemClient.getLogs({
     address: tokenAddress as `0x${string}`,
     event: {
@@ -376,7 +401,7 @@ export async function getHoldersCountViem(tokenAddress: string) {
         { indexed: false, name: 'value', type: 'uint256' },
       ],
     },
-    fromBlock: BigInt(0),
+    fromBlock: startingBlock,
     toBlock: 'latest',
   });
 
@@ -395,32 +420,4 @@ export async function getHoldersCountViem(tokenAddress: string) {
     }
   });
   return holdersCtn;
-}
-
-export async function getTokenPriceViem(address: Address) {
-  try {
-    if (address === WETH_ADDRESS) throw new Error('Address is WETH');
-    const pair = await viemClient.readContract({
-      address: uniswapV2FactoryAddress,
-      abi: factoryAbi,
-      functionName: 'getPair',
-      args: [address, WETH_ADDRESS],
-    });
-    if (pair === zeroAddress) throw new Error('Pair not found');
-
-    const [tokenAReserve, tokenBReserve] = (await viemClient.readContract({
-      address: pair as Address,
-      abi: pairABI,
-      functionName: 'getReserves',
-      args: [],
-    })) as bigint[];
-
-    // console.log('Reserves:', reserves);
-    // TODO implement this function
-
-    return 0;
-  } catch (e: any) {
-    console.log('Error at "getTokenPriceViem" helper', e.message);
-    return 0;
-  }
 }

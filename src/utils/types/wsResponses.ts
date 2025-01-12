@@ -12,6 +12,7 @@ export interface RequiredPoolData {
     tx24h: number;
     volume24h: string;
     age: string;
+    timestamp: number | string;
   };
   priceInfo: {
     priceUSDC: string;

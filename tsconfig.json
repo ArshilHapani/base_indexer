@@ -33,7 +33,8 @@
   "include": [
     "src",
     "tasks/workers/tokenConsumer.ts",
-    "tasks/cron/c_getTokens.ts"
+    "tasks/cron/c_getTokens.ts",
+    "tasks/listeners"
   ],
   "exclude": ["node_modules"]
 }

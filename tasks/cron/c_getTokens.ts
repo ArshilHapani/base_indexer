@@ -1,6 +1,6 @@
-import { ethers } from 'ethers';
 import cron from 'node-cron';
 import Websocket from 'ws';
+import { zeroAddress } from 'viem';
 
 import db from '@/utils/db';
 import {
@@ -54,7 +54,7 @@ async function job() {
   wsClient.send(JSON.stringify(publishDataToChannel));
 
   const workerData = latestTokens.map((token) => ({
-    address: token.address ?? ethers.ZeroAddress,
+    address: token.address ?? zeroAddress,
     name: token.tokenData.name ?? '',
     symbol: token.tokenData.symbol ?? '',
     decimals: token.tokenData.decimals ?? 0,

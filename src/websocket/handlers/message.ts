@@ -8,6 +8,7 @@ import {
   unsubscribeFromChannel,
 } from '../utils/channels';
 import {
+  handleLatestPairChannel,
   handleLatestPoolChannel,
   handleLatestTokensChannel,
   handleTrendingPoolsChannel,
@@ -36,9 +37,21 @@ export default async function handleMessage(
         subscribeToChannel(ws, channel);
 
         // handling initial connection (sending the latest data)
-        if (channel === 'latestTokens') handleLatestTokensChannel(ws);
-        if (channel === 'latestPools') handleLatestPoolChannel(ws);
-        if (channel === 'trendingPools') handleTrendingPoolsChannel(ws);
+        switch (channel) {
+          case 'latestTokens':
+            handleLatestTokensChannel(ws);
+            break;
+          case 'latestPools':
+            handleLatestPoolChannel(ws);
+            break;
+          case 'trendingPools':
+            handleTrendingPoolsChannel(ws);
+            break;
+          case 'latestPairs':
+            handleLatestPairChannel(ws);
+            break;
+        }
+
         break;
       case 'unsubscribeFromChannel':
         unsubscribeFromChannel(ws, channel);
