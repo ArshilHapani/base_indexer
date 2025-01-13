@@ -6,15 +6,16 @@ import { zeroAddress, type Address } from 'viem';
 
 import {
   FEE,
-  uniswapV2FactoryABI,
   uniswapV2FactoryAddress,
-  uniswapV2PairABI,
-  uniswapV2RouterABI,
   uniswapV2RouterAddress,
-  uniswapV3FactoryABI,
   uniswapV3FactoryAddressBase,
-  uniswapV3PoolABI,
 } from '@/utils/constants';
+import uniswapV3FactoryABI from '@/abi/V3Factory.json';
+import uniswapV3PoolABI from '@/abi/V3Pool.json';
+import uniswapV2RouterABI from '@/abi/V2Router.json';
+import uniswapV2PairABI from '@/abi/V2Pair.json';
+import uniswapV2FactoryABI from '@/abi/V2Factory.json';
+
 import viemClient from '../viem';
 
 type LiquidityData = {

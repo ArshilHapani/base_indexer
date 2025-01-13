@@ -82,6 +82,8 @@ export function getNonWETHToken(tokenA: string, tokenB: string) {
 
 /**
  * This function calculates the price of token0 in token1 and token1 in token0 using uniswap v3 math
+ *
+ * For more info read - https://blog.uniswap.org/uniswap-v3-math-primer/
  * @param PoolInfo Basic information to calculate the price
  * @returns price0In1, price1In0, price0In1Wei, price1In0Wei
  */
@@ -91,19 +93,15 @@ export function getPriceFromSqrtX96(PoolInfo: {
   Decimal1: number;
 }) {
   try {
-    // Ensure we're working with BigInt for intermediate calculations
     const sqrtPriceX96 = BigInt(PoolInfo.SqrtX96);
     const Q96 = BigInt(2) ** BigInt(96);
 
-    // Calculate squared price
     const squaredPrice = sqrtPriceX96 * sqrtPriceX96;
     const Q96Squared = Q96 * Q96;
 
-    // Calculate decimal adjustments
     const decimal0Adjustment = BigInt(10) ** BigInt(PoolInfo.Decimal0);
     const decimal1Adjustment = BigInt(10) ** BigInt(PoolInfo.Decimal1);
 
-    // Calculate prices maintaining precision until final conversion
     const price0In1Calc = parseFloat(
       (
         (squaredPrice * decimal0Adjustment) /
@@ -117,11 +115,9 @@ export function getPriceFromSqrtX96(PoolInfo: {
       ).toString()
     );
 
-    // Calculate Wei prices
     const price0In1WeiCalc = price0In1Calc * Number(decimal1Adjustment);
     const price1In0WeiCalc = price1In0Calc * Number(decimal0Adjustment);
 
-    // Convert to float with precision
     const price0In1 = price0In1Calc;
     const price1In0 = price1In0Calc;
     const price0In1Wei = price0In1WeiCalc;
@@ -137,4 +133,11 @@ export function getPriceFromSqrtX96(PoolInfo: {
     console.error('Error in getPriceFromSqrtX96:', error);
     throw error;
   }
+}
+
+export async function getTokenNativePrice(
+  tokenPriceInUsd: number,
+  ethPriceInUsd: number
+) {
+  return tokenPriceInUsd / ethPriceInUsd;
 }

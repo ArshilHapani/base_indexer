@@ -8,10 +8,10 @@ import getOrSetCacheRedis from './getOrSetRedisCache';
 import { getTokenMetadata, getTransactionCount } from './rpcCalls';
 import { calculateAgeFromDate } from '..';
 import viemClient from '../viem';
-import type { Pool, Token } from '../types/external';
-import type { RequiredPoolData } from '../types/wsResponses';
 import { getTokenPriceViem } from './priceDataHelpers';
 import v2Pair from '@/abi/V2Pair.json';
+import type { Pool, Token } from '../types/external';
+import type { RequiredPoolData } from '../types/wsResponses';
 
 export async function getTokenDataFromLiquidityPoolRes(
   apiRes: Pool[]
@@ -266,7 +266,7 @@ export async function getLatestPools(
             holdersCount: tokenHolderCount,
             tx24h:
               pool.attributes.transactions.h24.buys ??
-              0 + pool.attributes.transactions.h24.sells ??
+              0 + Number(pool.attributes.transactions.h24.sells) ??
               0,
             volume24h: pool.attributes.volume_usd.h24 ?? '0',
           },
@@ -307,10 +307,11 @@ export async function getLiquidityOfPairs(
     args: [],
   })) as bigint[];
 
-  const [tokenAPrice, tokenBPrice] = await Promise.all([
-    await getTokenPriceViem(tokenA as `0x${string}`),
-    await getTokenPriceViem(tokenB as `0x${string}`),
-  ]);
+  const [{ tokenPrice: tokenAPrice }, { tokenPrice: tokenBPrice }] =
+    await Promise.all([
+      await getTokenPriceViem(tokenA as `0x${string}`),
+      await getTokenPriceViem(tokenB as `0x${string}`),
+    ]);
   const totalTokenAPrice =
     (Number(reserve0) / 10 ** baseTokenDecimals) * tokenAPrice;
   const totalTokenBPrice =
@@ -420,4 +421,23 @@ export async function getHoldersCountViem(tokenAddress: string) {
     }
   });
   return holdersCtn;
+}
+
+export async function getTokenPairFromPool(poolAddress: `0x${string}`) {
+  const [token0, token1] = (await Promise.all([
+    viemClient.readContract({
+      address: poolAddress,
+      abi: v2Pair,
+      functionName: 'token0',
+    }),
+    viemClient.readContract({
+      address: poolAddress,
+      abi: v2Pair,
+      functionName: 'token1',
+    }),
+  ])) as [string, string];
+  return {
+    token0,
+    token1,
+  };
 }

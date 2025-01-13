@@ -2,6 +2,7 @@ import { erc20Abi, zeroAddress, type Address } from 'viem';
 
 import viemClient from '../viem';
 import {
+  BASE_ETH_USD_PRICE_FEED_AGGREGATOR_ADDRESS_CHAINLINK,
   uniswapV2FactoryAddress,
   uniswapV3FactoryAddressBase,
   V3_WETH_USD_POOL_ADDRESS,
@@ -14,11 +15,12 @@ import factoryAbi from '@/abi/V2Factory.json';
 import uniswapV3PoolABI from '@/abi/V3Pool.json';
 import pairABI from '@/abi/V2Pair.json';
 import v3FactoryAbi from '@/abi/V3Factory.json';
+import aggregatorAbi from '@/abi/PriceFeed.json';
 
 /**
  * This function fetches the price of ETH in USD from the Uniswap V3 pool
  */
-export async function getEthUsdPriceFromPool() {
+export async function getEthPriceFromEthUsdPool() {
   try {
     const [sqrtPriceX96] = (await viemClient.readContract({
       functionName: 'slot0',
@@ -31,11 +33,25 @@ export async function getEthUsdPriceFromPool() {
       Decimal0: 18,
       Decimal1: 6,
     });
-
     return Number(price.price0In1) ?? 0;
   } catch (e: any) {
-    console.log(`Error in getEthUsdPriceFromPool: ${e.message}`);
+    console.log(`Error in getEthPriceFromEthUsdPool: ${e.message}`);
     return 0;
+  }
+}
+
+export async function getEthPriceFromChainlink() {
+  try {
+    const data = (await viemClient.readContract({
+      address: BASE_ETH_USD_PRICE_FEED_AGGREGATOR_ADDRESS_CHAINLINK,
+      abi: aggregatorAbi,
+      functionName: 'latestRoundData',
+    })) as bigint[];
+    const price = data[1] / 10n ** 8n;
+    return price;
+  } catch (e: any) {
+    console.log(`Error in getEthPriceFromChainlink: ${e.message}`);
+    return await getEthPriceFromEthUsdPool();
   }
 }
 
@@ -130,10 +146,13 @@ export async function getTokenDecimals(tokenAddress: Address): Promise<number> {
  * @param address The address of the token
  * @returns price of the token in USD
  */
-export async function getTokenPriceViem(address: Address) {
+export async function getTokenPriceViem(
+  address: Address
+): Promise<{ ethPrice: number; tokenPrice: number }> {
   try {
-    const ethPrice = await getEthUsdPriceFromPool();
-    if (address === WETH_ADDRESS_BASE) return ethPrice;
+    const ethPrice = await getEthPriceFromEthUsdPool();
+    if (address === WETH_ADDRESS_BASE)
+      return { ethPrice, tokenPrice: ethPrice };
 
     const pair = await viemClient.readContract({
       address: uniswapV2FactoryAddress,
@@ -149,13 +168,20 @@ export async function getTokenPriceViem(address: Address) {
         address: uniswapV3FactoryAddressBase,
         abi: v3FactoryAbi,
         functionName: 'getPool',
-        args: [...[WETH_ADDRESS_BASE, address].sort(), feeTier],
+        args: [WETH_ADDRESS_BASE, address, feeTier],
       })) as Address;
 
       if (v3PoolAddress === zeroAddress) {
         throw new Error('Pair not found');
       } else {
-        return getTokenPriceV3(v3PoolAddress, WETH_ADDRESS_BASE, address);
+        return {
+          ethPrice,
+          tokenPrice: await getTokenPriceV3(
+            v3PoolAddress,
+            WETH_ADDRESS_BASE,
+            address
+          ),
+        };
       }
     }
     const { tokenReserve, wethReserve } = await getReservesAndIdentifyTokens(
@@ -175,10 +201,16 @@ export async function getTokenPriceViem(address: Address) {
     const reserveRatio =
       Number(wethReserveDecimal) / Number(tokenReserveDecimal);
     const tokenPrice = ethPrice * reserveRatio;
-    return tokenPrice ?? -1;
+    return {
+      ethPrice,
+      tokenPrice,
+    };
   } catch (e: any) {
     console.log('Error at "getTokenPriceViem" helper', e.message);
     const price = await getTokenPrice(address);
-    return price ?? -1;
+    return {
+      ethPrice: Number(await getEthPriceFromChainlink()),
+      tokenPrice: price,
+    };
   }
 }

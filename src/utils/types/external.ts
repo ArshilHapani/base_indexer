@@ -4,19 +4,19 @@
 
 export interface Token {
   address: string;
-  tokenPriceUSD: string;
-  tokenPriceNative: string;
+  tokenPriceUSD: string | number;
+  tokenPriceNative: string | number;
   name: string;
   tokenData: {
     decimals: number;
     logo: string | null;
     name: string;
     symbol: string;
-    totalSupply: string;
+    totalSupply: string | number;
   };
-  liquidityInUSD: string;
-  poolCreatedAt: string;
-  transactionCount: number;
+  liquidityInUSD: string | number;
+  poolCreatedAt: string | number;
+  transactionCount: number | string;
 }
 
 /**
@@ -26,62 +26,62 @@ export type Pool = {
   id: string;
   type: string;
   attributes: {
-    base_token_price_usd: string;
-    base_token_price_native_currency: string;
-    quote_token_price_usd: string;
-    quote_token_price_native_currency: string;
-    base_token_price_quote_token: string;
-    quote_token_price_base_token: string;
+    base_token_price_usd: string | number;
+    base_token_price_native_currency: string | number;
+    quote_token_price_usd: string | number;
+    quote_token_price_native_currency: string | number;
+    base_token_price_quote_token: string | number;
+    quote_token_price_base_token: string | number;
     address: string;
     name: string;
     pool_created_at: string;
-    fdv_usd: string;
+    fdv_usd: string | number | null;
     market_cap_usd: string | null;
     price_change_percentage: {
-      m5: string;
-      h1: string;
-      h6: string;
-      h24: string;
+      m5: string | number;
+      h1: string | number;
+      h6: string | number;
+      h24: string | number;
     };
     transactions: {
       m5: {
-        buys: number;
-        sells: number;
-        buyers: number;
-        sellers: number;
+        buys: number | string;
+        sells: number | string;
+        buyers: number | string;
+        sellers: number | string;
       };
       m15: {
-        buys: number;
-        sells: number;
-        buyers: number;
-        sellers: number;
+        buys: number | string;
+        sells: number | string;
+        buyers: number | string;
+        sellers: number | string;
       };
       m30: {
-        buys: number;
-        sells: number;
-        buyers: number;
-        sellers: number;
+        buys: number | string;
+        sells: number | string;
+        buyers: number | string;
+        sellers: number | string;
       };
       h1: {
-        buys: number;
-        sells: number;
-        buyers: number;
-        sellers: number;
+        buys: number | string;
+        sells: number | string;
+        buyers: number | string;
+        sellers: number | string;
       };
       h24: {
-        buys: number;
-        sells: number;
-        buyers: number;
-        sellers: number;
+        buys: number | string;
+        sells: number | string;
+        buyers: number | string;
+        sellers: number | string;
       };
     };
     volume_usd: {
-      m5: string;
-      h1: string;
-      h6: string;
-      h24: string;
+      m5: string | number;
+      h1: string | number;
+      h6: string | number;
+      h24: string | number;
     };
-    reserve_in_usd: string;
+    reserve_in_usd: string | number;
   };
   relationships: {
     base_token: {

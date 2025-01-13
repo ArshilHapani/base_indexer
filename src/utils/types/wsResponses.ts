@@ -5,21 +5,21 @@ export interface RequiredPoolData {
     address: string;
     name: string;
     symbol: string;
-    decimals: number;
+    decimals: number | string;
     logo: string;
-    liquidityInUSD: string;
-    holdersCount: number;
-    tx24h: number;
-    volume24h: string;
+    liquidityInUSD: string | number;
+    holdersCount: number | string;
+    tx24h: number | string;
+    volume24h: string | number;
     age: string;
     timestamp: number | string;
   };
   priceInfo: {
-    priceUSDC: string;
-    priceChange5m: string;
-    priceChange1h: string;
-    priceChange6h: string;
-    priceChange24h: string;
+    priceUSDC: string | number;
+    priceChange5m: string | number;
+    priceChange1h: string | number;
+    priceChange6h: string | number;
+    priceChange24h: string | number;
   };
   audit: {
     isHoneyPot: boolean;
