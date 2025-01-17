@@ -13,7 +13,7 @@ APP_IMAGE=defi-backend:latest
 APP_PORT=5000
 MANAGER_PORT=5010
 
-.PHONY: setup-server start-redis-server start-postgres-server start-server stress-test-ab stress-test-k6 build-image start-container push-image worker-tokenConsumer schedule-cron start-task-manager start-consumer-via-manager start-cron-via-manager
+.PHONY: setup-server start-redis-server start-postgres-server start-server stress-test-ab stress-test-k6 build-image start-container push-image worker-tokenConsumer schedule-cron start-task-manager start-consumer-via-manager start-cron-via-manager prisma-studio spin-required-servers
 
 setup-server:
 	@bun install
@@ -38,6 +38,10 @@ start-postgres-server:
 		echo "Postgres container exists. Starting it..."; \
 		docker start $(POSTGRES_CONTAINER); \
 	fi
+
+spin-required-servers:
+	@$(MAKE) start-redis-server
+	@$(MAKE) start-postgres-server
 
 start-server:
 	@docker container rm -f $(REDIS_CONTAINER) || true

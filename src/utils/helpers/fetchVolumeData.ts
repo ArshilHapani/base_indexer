@@ -215,6 +215,7 @@ async function fetchVolumeDataFromV2Pools(pool: Address) {
   // Calculate reserve values in USD
   const reserve0InUsd = adjustedReserve0 * token0Price.tokenPrice;
   const reserve1InUsd = adjustedReserve1 * token1Price.tokenPrice;
+  // TODO fix the reserveInUsd
   console.log({
     token0Price,
     token1Price,
@@ -258,7 +259,8 @@ export default fetchVolumeDataFromV2Pools;
 
 const res = await fetchVolumeDataFromV2Pools(
   //   '0x87AE85c836Cf1e28eD0C8212dB646FA160D46F4B'
-  '0xb909F567c5c2Bb1A4271349708CC4637D7318b4A'
+  // '0xb909F567c5c2Bb1A4271349708CC4637D7318b4A'
+  '0xCf42453467AD0AaEAc763dfBd38C8aD4500f3333'
 );
-console.log(JSON.stringify(res, null, 2));
+// console.log(JSON.stringify(res, null, 2));
 process.exit(0);

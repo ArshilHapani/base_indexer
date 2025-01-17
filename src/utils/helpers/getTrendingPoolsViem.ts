@@ -6,6 +6,7 @@ import { uniswapV3FactoryAddressBase } from '../constants';
 import { getTokenPriceViem } from './priceDataHelpers';
 import v3PoolAbi from '@/abi/V3Pool.json';
 import v3FactoryAbi from '@/abi/V3Factory.json';
+import fetchVolumeDataFromV2Pools from './fetchVolumeData';
 
 export async function getTrendingPoolsViem(): Promise<Pool[]> {
   try {
@@ -50,7 +51,7 @@ export async function getTrendingPoolsViem(): Promise<Pool[]> {
       );
       const { tokenPrice: token1Price } = await getTokenPriceViem(token1);
 
-      const volumeData = await fetchVolumeData(pool);
+      const volumeData = await fetchVolumeDataFromV2Pools(pool);
       const blockTimeStamp = await viemClient.getBlock({
         blockHash: log.blockHash,
       });
@@ -73,9 +74,41 @@ export async function getTrendingPoolsViem(): Promise<Pool[]> {
           fdv_usd: calculateFDV(BigInt(liquidity as number), token0Price),
           market_cap_usd: null, // Replace with real calculation if needed
           price_change_percentage: volumeData.priceChange,
-          transactions: volumeData.transactions,
+          // TODO fix this with real data
+          transactions: {
+            h1: {
+              buyers: volumeData.volume.h1,
+              sellers: volumeData.volume.h1,
+              buys: volumeData.volume.h1,
+              sells: volumeData.volume.h1,
+            },
+            h24: {
+              buyers: volumeData.volume.h24,
+              sellers: volumeData.volume.h24,
+              buys: volumeData.volume.h24,
+              sells: volumeData.volume.h24,
+            },
+            m15: {
+              buyers: volumeData.volume.m15,
+              sellers: volumeData.volume.m15,
+              buys: volumeData.volume.m15,
+              sells: volumeData.volume.m15,
+            },
+            m30: {
+              buyers: volumeData.volume.m30,
+              sellers: volumeData.volume.m30,
+              buys: volumeData.volume.m30,
+              sells: volumeData.volume.m30,
+            },
+            m5: {
+              buyers: volumeData.volume.m5,
+              sellers: volumeData.volume.m5,
+              buys: volumeData.volume.m5,
+              sells: volumeData.volume.m5,
+            },
+          },
           volume_usd: volumeData.volume,
-          reserve_in_usd: volumeData.reserve,
+          reserve_in_usd: volumeData.reserve.reserve0,
         },
         relationships: {
           base_token: { data: { id: token0.toLowerCase(), type: 'token' } },
@@ -101,26 +134,10 @@ export async function getTrendingPoolsViem(): Promise<Pool[]> {
   }
 }
 
-async function fetchVolumeData(pool: Address) {
-  // Implement volume and transaction aggregation based on Swap events
-  return {
-    volume: { m5: '0', h1: '0', h6: '0', h24: '0' },
-    transactions: {
-      m5: { buys: 0, sells: 0, buyers: 0, sellers: 0 },
-      m15: { buys: 0, sells: 0, buyers: 0, sellers: 0 },
-      m30: { buys: 0, sells: 0, buyers: 0, sellers: 0 },
-      h1: { buys: 0, sells: 0, buyers: 0, sellers: 0 },
-      h24: { buys: 0, sells: 0, buyers: 0, sellers: 0 },
-    },
-    priceChange: { m5: '0', h1: '0', h6: '0', h24: '0' },
-    reserve: '0',
-  };
-}
-
 function calculateFDV(liquidity: bigint, priceUsd: string | number): string {
   return (liquidity * BigInt(priceUsd)).toString();
 }
 
 const data = await getTrendingPoolsViem();
-// console.log(data);
+console.log(data);
 process.exit(0);

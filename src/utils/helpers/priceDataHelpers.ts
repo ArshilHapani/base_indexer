@@ -55,7 +55,9 @@ export async function getEthPriceFromChainlink() {
   }
 }
 
-export async function getTokenPriceV3(
+export async function getTokenPriceV3(token: string) {}
+
+export async function _getTokenPriceV3(
   pool: Address,
   token0Address: Address,
   token1Address: Address
@@ -154,15 +156,24 @@ export async function getTokenPriceViem(
     if (address === WETH_ADDRESS_BASE)
       return { ethPrice, tokenPrice: ethPrice };
 
-    const pair = await viemClient.readContract({
-      address: uniswapV2FactoryAddress,
-      abi: factoryAbi,
-      functionName: 'getPair',
-      args: [WETH_ADDRESS_BASE, address],
-    });
+    const [pair0, pair1] = await Promise.all([
+      viemClient.readContract({
+        address: uniswapV2FactoryAddress,
+        abi: factoryAbi,
+        functionName: 'getPair',
+        args: [WETH_ADDRESS_BASE, address],
+      }),
+      viemClient.readContract({
+        address: uniswapV2FactoryAddress,
+        abi: factoryAbi,
+        functionName: 'getPair',
+        args: [address, WETH_ADDRESS_BASE],
+      }),
+    ]);
+    const pair = pair0 !== zeroAddress ? pair0 : pair1;
 
-    let v3PoolAddress: Address = zeroAddress;
     if (pair === zeroAddress) {
+      let v3PoolAddress: Address = zeroAddress;
       const feeTier = 500;
       v3PoolAddress = (await viemClient.readContract({
         address: uniswapV3FactoryAddressBase,
@@ -176,7 +187,7 @@ export async function getTokenPriceViem(
       } else {
         return {
           ethPrice,
-          tokenPrice: await getTokenPriceV3(
+          tokenPrice: await _getTokenPriceV3(
             v3PoolAddress,
             WETH_ADDRESS_BASE,
             address
