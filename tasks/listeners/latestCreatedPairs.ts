@@ -29,6 +29,7 @@ export async function watchEventOnContract() {
     eventName: 'PairCreated',
     pollingInterval: 3000, // 3 second
     onLogs: (logs) => {
+      console.log(`logs received: ${logs.length}`);
       logs.forEach((log) => {
         (async function () {
           const timeStamp =
@@ -39,6 +40,7 @@ export async function watchEventOnContract() {
                 })
               ).timestamp
             ) * 1000;
+
           const data = decodeEventLog({
             abi: factoryContractABI,
             eventName: 'PairCreated',
@@ -46,9 +48,16 @@ export async function watchEventOnContract() {
             data: log.data,
             strict: true,
           });
+
           if (data && data.args) {
             const [token0, token1, pairAddress] = data.args as `0x${string}`[];
-            const wsData = await getPairDataByAddress(pairAddress, timeStamp);
+            const wsData = await getPairDataByAddress(
+              pairAddress,
+              token0,
+              token1,
+              log.transactionHash ?? '',
+              timeStamp
+            );
             const wsDataFormatted: WsMessage = {
               type: 'publishToChannel',
               channel: 'latestPairs',
@@ -56,8 +65,11 @@ export async function watchEventOnContract() {
             };
 
             ws.send(JSON.stringify(wsDataFormatted));
+
+            /* storing data in db (function execution is not awaited, so it will sends the response to client without waiting for db operation)
+             */
             const existingPair = await db.pair.findFirst({
-              // for development only
+              // for development only (to prevent duplicate data)
               where: {
                 pairAddress,
               },
@@ -82,3 +94,16 @@ export async function watchEventOnContract() {
 }
 
 watchEventOnContract();
+
+/**
+ * Require data
+ *
+ * pair_address
+ * dex_name
+ * pair_creation_tx_hash (missing)
+ * base_token
+ * quote_token
+ * creation_time
+ * base_token_details -> name, symbol, uri, address, user, website, twitter
+ * market_data -> liquidity, total_holders, tx_1h, volume_1h, market_cap
+ */

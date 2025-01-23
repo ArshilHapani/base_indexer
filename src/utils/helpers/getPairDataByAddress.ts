@@ -1,11 +1,9 @@
-import type { Address } from 'viem';
+import { parseUnits, type Address } from 'viem';
 
-import pairAbi from '@/abi/V2Pair.json';
-import type { RequiredPoolData } from '../types/wsResponses';
-import viemClient from '../viem';
+import type { Pair } from '../types/wsResponses';
 import { getTokenMetadata } from './rpcCalls';
 import { getTokenDecimals, getTokenPriceViem } from './priceDataHelpers';
-import { calculateAgeFromDate, getNonWETHToken } from '..';
+import { getNonWETHToken } from '..';
 import {
   get24hrVolume,
   getHoldersCountViem,
@@ -15,62 +13,59 @@ import {
 
 export default async function getPairDataByAddress(
   pairAddress: Address,
+  token0: Address,
+  token1: Address,
+  txHash: string,
   timeStamp: number | string
-): Promise<RequiredPoolData> {
-  const [tokenA, tokenB] = await Promise.all([
-    viemClient.readContract({
-      abi: pairAbi,
-      address: pairAddress,
-      functionName: 'token0',
-    }),
-    viemClient.readContract({
-      abi: pairAbi,
-      address: pairAddress,
-      functionName: 'token1',
-    }),
-  ]);
+): Promise<Pair> {
   const { baseToken, quoteToken } = getNonWETHToken(
-    tokenA as string,
-    tokenB as string
+    token0 as string,
+    token1 as string
   );
-  const [decimalA, decimalB] = await Promise.all([
-    getTokenDecimals(baseToken as Address),
-    getTokenDecimals(quoteToken as Address),
-  ]);
-  const [baseTokenInfo, { liquidityInUSD }] = await Promise.all([
-    getTokenMetadata(baseToken),
-    getLiquidityOfPairs(pairAddress, baseToken, quoteToken, decimalA, decimalB),
-  ]);
+  const decimalB = await getTokenDecimals(quoteToken as Address);
+  const {
+    decimals: decimalA,
+    logo,
+    name,
+    symbol,
+    totalSupply,
+  } = await getTokenMetadata(baseToken as Address);
+  const baseTokenPrice = await getTokenPriceViem(baseToken as Address);
+  const priceInWei = parseUnits(
+    baseTokenPrice.tokenPrice.toString(),
+    decimalA ?? 18
+  );
+  const marketCap =
+    (BigInt(totalSupply ?? 0) * priceInWei) / parseUnits('1', decimalA ?? 18);
+
   return {
     pairAddress,
-    quoteTokenAddress: quoteToken,
-
-    baseTokenInfo: {
-      address: baseToken,
-      age: calculateAgeFromDate(timeStamp),
-      decimals: baseTokenInfo.decimals ?? 18,
-      holdersCount: await getHoldersCountViem(baseToken),
-      liquidityInUSD: liquidityInUSD.toString(),
-      logo: baseTokenInfo.logo ?? '',
-      name: baseTokenInfo.name ?? '',
-      symbol: baseTokenInfo.symbol ?? '',
-      timestamp: timeStamp,
-      tx24h: await getTransactionCountViem(baseToken as Address),
-      volume24h: (await get24hrVolume(pairAddress)).toString(),
+    dexName: 'Uniswap',
+    pairCreationTxHash: txHash,
+    baseToken,
+    quoteToken,
+    creationTime: timeStamp.toString(),
+    baseTokenDetails: {
+      name: name ?? '',
+      symbol: symbol ?? '',
+      uri: logo ?? '',
+      mint: baseToken ?? '',
+      user: pairAddress,
     },
-    audit: {
-      insiders: 0,
-      isHoneyPot: false,
-      isVerified: true,
-      locked: false,
-      renounced: false,
-    },
-    priceInfo: {
-      priceChange1h: '0',
-      priceChange24h: '0',
-      priceChange5m: '0',
-      priceChange6h: '0',
-      priceUSDC: (await getTokenPriceViem(baseToken as Address)).toString(),
+    marketData: {
+      liquidity: (
+        await getLiquidityOfPairs(
+          pairAddress,
+          token0,
+          token1,
+          decimalA ?? 18,
+          decimalB
+        )
+      ).liquidityInUSD,
+      totalHolders: await getHoldersCountViem(pairAddress),
+      tx_1h: await getTransactionCountViem(pairAddress),
+      volume1H: await get24hrVolume(pairAddress),
+      marketCap: marketCap.toString(),
     },
   };
 }

@@ -30,3 +30,32 @@ export interface RequiredPoolData {
     insiders: number;
   };
 }
+
+type BaseTokenDetails = {
+  name: string;
+  symbol: string;
+  uri: string;
+  mint: string;
+  user: string;
+  website?: string;
+  twitter?: string;
+};
+
+type MarketData = {
+  liquidity?: number | string;
+  totalHolders?: number | string;
+  tx_1h?: number | string;
+  volume1H?: number | string;
+  marketCap?: number | string;
+};
+
+export type Pair = {
+  pairAddress: string;
+  dexName: string;
+  pairCreationTxHash: string;
+  baseToken: string;
+  quoteToken: string;
+  creationTime: string;
+  baseTokenDetails: BaseTokenDetails;
+  marketData: MarketData;
+};

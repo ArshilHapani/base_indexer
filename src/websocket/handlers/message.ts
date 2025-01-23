@@ -61,7 +61,7 @@ export default async function handleMessage(
           JSON.stringify({
             type: 'error',
             payload:
-              'Invalid message format, available message types: createChannel, publishToChannel, subscribeToChannel, unsubscribeFromChannel',
+              'Invalid message format, available message types: "createChannel", "publishToChannel", "subscribeToChannel", "unsubscribeFromChannel"',
           })
         );
         break;

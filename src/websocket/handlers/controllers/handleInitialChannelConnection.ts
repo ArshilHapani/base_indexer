@@ -3,14 +3,14 @@
  */
 
 import type { WebSocket } from 'ws';
+import type { Address } from 'viem';
 
-import { spawnProcess } from '#/tasks';
 import { getLatestPools, getLatestTokens } from '@/utils/helpers';
 import client from '@/utils/redis';
-import type { WsMessage } from '@/websocket';
 import db from '@/utils/db';
 import getPairDataByAddress from '@/utils/helpers/getPairDataByAddress';
-import type { Address } from 'viem';
+import { spawnProcess } from '#/tasks';
+import type { WsMessage } from '@/websocket';
 
 export async function handleLatestTokensChannel(ws: WebSocket) {
   spawnProcess('tasks/cron/c_getTokens.ts', 'latestTokens'); // spawns the cron job to fetch the latest tokens
@@ -150,23 +150,23 @@ export async function handleLatestPairChannel(ws: WebSocket) {
         },
       });
 
-      const freshData = await Promise.all(
-        latestData.map(async function ({ pairAddress, createdAt }) {
-          const pairInfo = await getPairDataByAddress(
-            pairAddress as Address,
-            createdAt.toISOString()
-          );
-          return pairInfo;
-        })
-      );
-      const wsData: WsMessage = {
-        channel: 'latestPairs',
-        payload: freshData,
-        type: 'publishToChannel',
-      };
-      ws.send(JSON.stringify(wsData));
+      // const freshData = await Promise.all(
+      //   latestData.map(async function ({ pairAddress, createdAt }) {
+      //     const pairInfo = await getPairDataByAddress(
+      //       pairAddress as Address,
+      //       createdAt.toISOString()
+      //     );
+      //     return pairInfo;
+      //   })
+      // );
+      // const wsData: WsMessage = {
+      //   channel: 'latestPairs',
+      //   payload: freshData,
+      //   type: 'publishToChannel',
+      // };
+      // ws.send(JSON.stringify(wsData));
 
-      await client?.set('latestPairTask', JSON.stringify(freshData));
+      // await client?.set('latestPairTask', JSON.stringify(freshData));
     }
   } catch (error: any) {
     console.log(`Error in "handleLatestPairChannel" ${error.message}`);

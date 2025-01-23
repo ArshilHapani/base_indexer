@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
+import chalk from 'chalk';
 
 import v1Router from '@/routes/v1';
 import healthRouter from './routes/health';
@@ -25,8 +26,14 @@ setupSwagger(app);
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`Server is running on port http://localhost:${PORT}`);
-  console.log(`Swagger is running on http://localhost:${PORT}/api-docs`);
+  console.log(
+    `Server is running on port ${chalk.magenta(`http://localhost:${PORT}`)}`
+  );
+  console.log(
+    `Swagger is running on ${chalk.magentaBright(
+      `http://localhost:${PORT}/api-docs`
+    )}`
+  );
 });
 
 export const wss = initWebSocket(server);
