@@ -14,6 +14,7 @@ import {
   handleTrendingPoolsChannel,
 } from './controllers/handleInitialChannelConnection';
 import type { WsMessage } from '..';
+import { influxLogger } from '@/utils/influxDB';
 
 type WsMessagePayload = Token[] | undefined;
 
@@ -39,16 +40,16 @@ export default async function handleMessage(
         // handling initial connection (sending the latest data)
         switch (channel) {
           case 'latestTokens':
-            handleLatestTokensChannel(ws);
+            await handleLatestTokensChannel(ws);
             break;
           case 'latestPools':
-            handleLatestPoolChannel(ws);
+            await handleLatestPoolChannel(ws);
             break;
           case 'trendingPools':
-            handleTrendingPoolsChannel(ws);
+            await handleTrendingPoolsChannel(ws);
             break;
           case 'latestPairs':
-            handleLatestPairChannel(ws);
+            await handleLatestPairChannel(ws);
             break;
         }
 
@@ -75,6 +76,11 @@ export default async function handleMessage(
           'Invalid message format, available message types: createChannel, publishToChannel, subscribeToChannel, unsubscribeFromChannel' +
           e.message,
       })
+    );
+    await influxLogger.writeLog(
+      'websocket_error',
+      { message: e.message, function: 'handleMessage', file: 'message.ts' },
+      { level: 'error' }
     );
   }
 }

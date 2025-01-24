@@ -2,8 +2,9 @@
  * @fileoverview tokens state for websocket
  */
 
-import type { Token } from '@/utils/types/external';
 import { WebSocket } from 'ws';
+
+import type { Token } from '@/utils/types/external';
 
 import type { ChannelTypes } from '..';
 

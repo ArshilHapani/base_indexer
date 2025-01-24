@@ -8,6 +8,7 @@ import healthRouter from './routes/health';
 import { defaultController } from '@/controllers/';
 import { setupSwagger } from './swagger';
 import initWebSocket from './websocket';
+import { influxLogger } from './utils/influxDB';
 
 dotenv.config();
 
@@ -33,6 +34,13 @@ const server = app.listen(PORT, () => {
     `Swagger is running on ${chalk.magentaBright(
       `http://localhost:${PORT}/api-docs`
     )}`
+  );
+});
+server.on('error', async (err) => {
+  await influxLogger.writeLog(
+    'server_error',
+    { message: err.message, file: 'server.ts' },
+    { level: 'error' }
   );
 });
 

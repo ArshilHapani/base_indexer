@@ -5,6 +5,7 @@ dotenv.config();
 
 const TokenProduceQueue = createQueue('tokenProducer');
 const LatestCreatedPairQueue = createQueue('latestCreatedPair');
+const LoggingQueue = createQueue('logging');
 
 function createQueue(name: string) {
   const queue = new Queue(name, {
@@ -15,4 +16,4 @@ function createQueue(name: string) {
   return queue;
 }
 
-export { TokenProduceQueue, LatestCreatedPairQueue };
+export { TokenProduceQueue, LatestCreatedPairQueue, LoggingQueue };

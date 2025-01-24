@@ -6,8 +6,9 @@ import viemClient from '@/utils/viem';
 import db from '@/utils/db';
 import type { WsMessage } from '@/websocket';
 import getPairDataByAddress from '@/utils/helpers/getPairDataByAddress';
+import chalk from 'chalk';
 
-const ROUTER_CONTRACT_ADDRESS = '0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6';
+const V2_ROUTER_CONTRACT_ADDRESS = '0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6';
 
 const ws = new WebSocket(
   process.env.WEBSOCKET_SERVER_URL ?? 'ws://localhost:5000'
@@ -24,7 +25,7 @@ ws.on('open', () => {
 
 export async function watchEventOnContract() {
   viemClient.watchContractEvent({
-    address: ROUTER_CONTRACT_ADDRESS,
+    address: V2_ROUTER_CONTRACT_ADDRESS,
     abi: factoryContractABI,
     eventName: 'PairCreated',
     pollingInterval: 3000, // 3 second
@@ -93,7 +94,13 @@ export async function watchEventOnContract() {
   });
 }
 
-watchEventOnContract();
+watchEventOnContract()
+  .catch((e) => {
+    console.log(chalk.red('Error in watchEventOnContract:'), e);
+  })
+  .finally(() => {
+    console.log('watchEventOnContract completed');
+  });
 
 /**
  * Require data

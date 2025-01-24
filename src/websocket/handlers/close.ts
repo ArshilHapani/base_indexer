@@ -3,6 +3,7 @@ import type { WebSocket, WebSocketServer } from 'ws';
 import { channels } from '../state';
 import { killProcess } from '#/tasks';
 import type { ChannelTypes } from '..';
+import chalk from 'chalk';
 
 export default function handleClose(ws: WebSocket, wss: WebSocketServer) {
   ws.close();
@@ -25,7 +26,9 @@ function clearProcessesAndResource(
     if (channel.size === 0) {
       channels.delete(name);
       killProcess(name);
-      console.log(`Channel ${name} is closed, and process is killed`);
+      console.log(
+        chalk.bgYellowBright(`Channel ${name} is closed, and process is killed`)
+      );
     }
   }
 }

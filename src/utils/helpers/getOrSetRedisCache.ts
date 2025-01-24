@@ -1,3 +1,4 @@
+import { influxLogger } from '../influxDB';
 import client from '../redis';
 
 // Set this to true to see cache logs.
@@ -52,8 +53,17 @@ export default async function getOrSetCacheRedis<T>(
     });
 
     return freshData;
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Cache error for ${key}:`, error);
+    await influxLogger.writeLog(
+      'redis_error',
+      {
+        message: error.message,
+        function: 'getOrSetCacheRedis',
+        file: 'getOrSetRedisCache.ts',
+      },
+      { level: 'error', function: 'getOrSetCacheRedis', key }
+    );
     return cb();
   }
 }

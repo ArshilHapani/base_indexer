@@ -2,12 +2,26 @@ import WebSocket, { type WebSocketServer } from 'ws';
 import type { IncomingMessage, Server } from 'http';
 
 import setupHandlers from './handlers/connection';
+import { influxLogger } from '@/utils/influxDB';
 
 export default function initWebSocket(server: Server) {
   const wss = new WebSocket.Server({ server });
   wss.on('connection', async function (ws, req) {
     console.log('Connected');
     setupHandlers(ws, wss);
+  });
+
+  wss.on('error', async (err) => {
+    console.log('Error in WebSocket server', err);
+    await influxLogger.writeLog(
+      'websocket_error',
+      {
+        message: err.message,
+        function: 'initWebSocket',
+        file: 'websocket/index.ts',
+      },
+      { level: 'error' }
+    );
   });
 
   console.log(

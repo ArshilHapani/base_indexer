@@ -3,12 +3,10 @@
  */
 
 import type { WebSocket } from 'ws';
-import type { Address } from 'viem';
 
 import { getLatestPools, getLatestTokens } from '@/utils/helpers';
 import client from '@/utils/redis';
-import db from '@/utils/db';
-import getPairDataByAddress from '@/utils/helpers/getPairDataByAddress';
+import { influxLogger } from '@/utils/influxDB';
 import { spawnProcess } from '#/tasks';
 import type { WsMessage } from '@/websocket';
 
@@ -32,13 +30,13 @@ export async function handleLatestTokensChannel(ws: WebSocket) {
     } else {
       // if cache is empty or not available then fetch the latest tokens from api
       const latestTokens = await getLatestTokens();
-      await client?.set('latestTokensCron', JSON.stringify(latestTokens)); // sets the cache for other clients
       ws.send(
         JSON.stringify({
           type: 'latestTokens-initial-response',
           payload: latestTokens,
         })
       );
+      await client?.set('latestTokensCron', JSON.stringify(latestTokens)); // sets the cache for other clients
     }
   } catch (e: any) {
     console.log(`Error in handleLatestTokensChannel: ${e.message}`);
@@ -47,6 +45,15 @@ export async function handleLatestTokensChannel(ws: WebSocket) {
         type: 'error',
         payload: 'Error in handleLatestTokensChannel',
       })
+    );
+    await influxLogger.writeLog(
+      'websocket_error',
+      {
+        message: e.message,
+        function: 'handleLatestTokensChannel',
+        file: 'handleInitialChannelConnection.ts',
+      },
+      { level: 'error' }
     );
   }
 }
@@ -139,34 +146,7 @@ export async function handleLatestPairChannel(ws: WebSocket) {
       };
       ws.send(JSON.stringify(wsData));
     } else {
-      const latestData = await db.pair.findMany({
-        take: 20,
-        select: {
-          pairAddress: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-
-      // const freshData = await Promise.all(
-      //   latestData.map(async function ({ pairAddress, createdAt }) {
-      //     const pairInfo = await getPairDataByAddress(
-      //       pairAddress as Address,
-      //       createdAt.toISOString()
-      //     );
-      //     return pairInfo;
-      //   })
-      // );
-      // const wsData: WsMessage = {
-      //   channel: 'latestPairs',
-      //   payload: freshData,
-      //   type: 'publishToChannel',
-      // };
-      // ws.send(JSON.stringify(wsData));
-
-      // await client?.set('latestPairTask', JSON.stringify(freshData));
+      // TODO - fetch the latest pairs from the database
     }
   } catch (error: any) {
     console.log(`Error in "handleLatestPairChannel" ${error.message}`);
