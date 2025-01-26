@@ -9,6 +9,7 @@ import { defaultController } from '@/controllers/';
 import { setupSwagger } from './swagger';
 import initWebSocket from './websocket';
 import { influxLogger } from './utils/influxDB';
+import { findAvailablePort } from './utils';
 
 dotenv.config();
 
@@ -22,26 +23,27 @@ app.get('/', defaultController);
 app.use('/health', healthRouter);
 app.use('/api/v1', v1Router);
 
-setupSwagger(app);
+(async function () {
+  setupSwagger(app);
+  let PORT = process.env.PORT || 5000;
+  PORT = (await findAvailablePort(PORT)) ? 5000 : PORT;
 
-const PORT = process.env.PORT || 5000;
-
-const server = app.listen(PORT, () => {
-  console.log(
-    `Server is running on port ${chalk.magenta(`http://localhost:${PORT}`)}`
-  );
-  console.log(
-    `Swagger is running on ${chalk.magentaBright(
-      `http://localhost:${PORT}/api-docs`
-    )}`
-  );
-});
-server.on('error', async (err) => {
-  await influxLogger.writeLog(
-    'server_error',
-    { message: err.message, file: 'server.ts' },
-    { level: 'error' }
-  );
-});
-
-export const wss = initWebSocket(server);
+  const server = app.listen(PORT, () => {
+    console.log(
+      `Server is running on port ${chalk.magenta(`http://localhost:${PORT}`)}`
+    );
+    console.log(
+      `Swagger is running on ${chalk.magentaBright(
+        `http://localhost:${PORT}/api-docs`
+      )}`
+    );
+  });
+  server.on('error', async (err) => {
+    await influxLogger.writeLog(
+      'server_error',
+      { message: `Error at "server.ts": ${err.message}` },
+      { level: 'error' }
+    );
+  });
+  initWebSocket(server);
+})();

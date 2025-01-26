@@ -55,15 +55,9 @@ export default async function getOrSetCacheRedis<T>(
     return freshData;
   } catch (error: any) {
     console.error(`Cache error for ${key}:`, error);
-    await influxLogger.writeLog(
-      'redis_error',
-      {
-        message: error.message,
-        function: 'getOrSetCacheRedis',
-        file: 'getOrSetRedisCache.ts',
-      },
-      { level: 'error', function: 'getOrSetCacheRedis', key }
-    );
+    await influxLogger.writeLog('redis_error', {
+      message: `Error in getOrSetCacheRedis function in getOrSetRedisCache.ts for key ${key}: ${error.message}`,
+    });
     return cb();
   }
 }

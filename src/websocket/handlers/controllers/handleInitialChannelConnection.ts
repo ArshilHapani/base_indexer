@@ -49,9 +49,7 @@ export async function handleLatestTokensChannel(ws: WebSocket) {
     await influxLogger.writeLog(
       'websocket_error',
       {
-        message: e.message,
-        function: 'handleLatestTokensChannel',
-        file: 'handleInitialChannelConnection.ts',
+        message: `Error at handleLatestTokenChannel in handleInitialChannelConnection.ts -  ${e.message}`,
       },
       { level: 'error' }
     );

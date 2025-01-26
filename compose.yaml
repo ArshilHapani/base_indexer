@@ -1,0 +1,92 @@
+services:
+  reverse-proxy:
+    privileged: true
+    image: traefik:v3.3.2
+    command:
+      - '--api=true'
+      - '--api.dashboard=true'
+      - '--serversTransport.insecureSkipVerify=true'
+      - '--log.level=DEBUG'
+      - '--providers.docker=true'
+      - '--providers.docker.network=app_net'
+      - '--providers.docker.exposedbydefault=false'
+      - '--entrypoints.websecure.address=:443'
+      - '--entrypoints.websecure.http.tls=true'
+      - '--entrypoints.web.address=:80'
+
+    ports:
+      # The HTTP port
+      - '80:80'
+      # The Web UI (enabled by --api.insecure=true)
+      - '8080:8080'
+    volumes:
+      # note replace user id when hosting somewhere else
+      - '/run/user/1000/podman/podman.sock:/var/run/docker.sock:ro'
+
+    networks:
+      - app_net
+  backend:
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/`)'
+      - 'traefik.http.routers.backend.entrypoints=web'
+      - 'traefik.http.services.backend.loadbalancer.server.port=5000'
+
+    command: --verbose
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - app_net
+    env_file:
+      - .env
+
+    depends_on:
+      - database
+      - redis
+      - influx
+
+  database:
+    image: postgres:17.2-alpine3.21
+    container_name: defi_postgres
+    networks:
+      - app_net
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.4.1-alpine
+    container_name: defi_redis
+    networks:
+      - app_net
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  influx:
+    image: influxdb:2.7-alpine
+    container_name: defi_influx
+    networks:
+      - app_net
+    ports:
+      - '8086:8086'
+    env_file:
+      - .env
+    volumes:
+      - influx_data:/var/lib/influxdb2
+
+volumes:
+  postgres_data:
+  redis_data:
+  influx_data:
+  traefik_data:
+
+networks:
+  app_net:

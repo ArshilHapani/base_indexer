@@ -141,3 +141,23 @@ export async function getTokenNativePrice(
 ) {
   return tokenPriceInUsd / ethPriceInUsd;
 }
+
+export async function findAvailablePort(
+  startingPort: number | string
+): Promise<number> {
+  let port = Number(startingPort);
+  while (true) {
+    try {
+      const server = Bun.serve({
+        port,
+        fetch() {
+          return new Response('Testing port');
+        },
+      });
+      server.stop();
+      return port; // Return the first available port
+    } catch (error) {
+      port++; // Increment port and try the next one
+    }
+  }
+}

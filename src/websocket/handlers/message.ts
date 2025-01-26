@@ -79,7 +79,9 @@ export default async function handleMessage(
     );
     await influxLogger.writeLog(
       'websocket_error',
-      { message: e.message, function: 'handleMessage', file: 'message.ts' },
+      {
+        message: `Error in handleMessage function in message.ts: ${e.message}`,
+      },
       { level: 'error' }
     );
   }

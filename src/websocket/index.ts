@@ -16,9 +16,7 @@ export default function initWebSocket(server: Server) {
     await influxLogger.writeLog(
       'websocket_error',
       {
-        message: err.message,
-        function: 'initWebSocket',
-        file: 'websocket/index.ts',
+        message: `WebSocket error occurred in function 'initWebSocket' in file 'websocket/index.ts': ${err.message}`,
       },
       { level: 'error' }
     );

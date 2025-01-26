@@ -13,7 +13,8 @@ if (!client) {
     console.error('Redis client error', err);
     await influxLogger.writeLog(
       'redis_error',
-      { message: err.message, function: 'client.on', file: 'redis.ts' },
+      { message: `Redis client error in redis.ts: ${err.message}` },
+
       { level: 'error' }
     );
   });
@@ -22,7 +23,7 @@ if (!client) {
     console.error('Redis client error', e);
     await influxLogger.writeLog(
       'redis_error',
-      { message: e.message, function: 'client.connect', file: 'redis.ts' },
+      { message: `Redis client connection error in redis.ts: ${e.message}` },
       { level: 'error' }
     );
   });

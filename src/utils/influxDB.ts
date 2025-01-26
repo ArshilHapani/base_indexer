@@ -41,13 +41,13 @@ class InfluxLogger {
 
   async writeLog(
     measurement: string,
-    fields: Record<string, any>,
+    field: Record<string, string | number | boolean | bigint>,
     tags?: Record<string, string>
   ): Promise<void> {
     try {
       const point = new Point(measurement);
 
-      for (const [key, value] of Object.entries(fields)) {
+      for (const [key, value] of Object.entries(field)) {
         if (typeof value === 'number') point.floatField(key, value);
         else point.stringField(key, value.toString());
       }

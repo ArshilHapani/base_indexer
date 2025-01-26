@@ -129,7 +129,12 @@ build-image:
 	@docker build -t defi-backend:latest .
 
 start-container:
+	@$(MAKE) stop-server
+	@$(MAKE) spin-required-servers
 	@docker run -d --name $(APP_CONTAINER) --network="host" --env-file .env -p 5000:$(APP_PORT) $(APP_IMAGE)
+
+watch-logs:	
+	@docker logs -f $(APP_CONTAINER)
 
 push-image:
 	@if [ -z "$(TAG)" ]; then echo "Error: TAG is not set. Use 'make push-image TAG=<tag>'"; exit 1; fi
@@ -140,6 +145,12 @@ push-image:
 	@echo "Pushing image to Docker Hub with tag $(TAG)..."
 	@docker push docker.io/arshilhapani/defi-backend:$(TAG) || { echo "Image push failed"; exit 1; }
 	@echo "Image successfully pushed as arshilhapani/defi-backend:$(TAG)"
+
+compose-up:
+	@docker-compose up
+
+compose-down:
+	@docker-compose down
 
 ######################################################################
 ######################## APPLICATION SCRIPTS ########################
