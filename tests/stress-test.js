@@ -14,11 +14,11 @@ export const options = {
 };
 
 export default function () {
-  const base_url = 'http://localhost:5000';
+  const base_url = 'http://localhost';
   const endpoint =
-    'api/v1/pools/trades?poolAddress=0x36545f9123a356faa3e0f3728f1e0c416814580a';
+    'api/v1/tokens/0x8ee87cd9eef20a5b7b81b3b947bd40e65fd51e99/getTokenHolders?page=1';
 
   const res = http.get(`${base_url}/${endpoint}`);
   check(res, { 'status was 200': (r) => r.status == 200 });
-  // sleep()
+  sleep()
 }

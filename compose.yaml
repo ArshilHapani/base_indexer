@@ -1,17 +1,11 @@
 services:
   reverse-proxy:
+    container_name: traefik-reverse-proxy
     privileged: true
     image: traefik:v3.3.2
     command:
-      - '--api=true'
-      - '--api.dashboard=true'
-      - '--serversTransport.insecureSkipVerify=true'
-      - '--log.level=DEBUG'
+      - '--api.insecure=true'
       - '--providers.docker=true'
-      - '--providers.docker.network=app_net'
-      - '--providers.docker.exposedbydefault=false'
-      - '--entrypoints.websecure.address=:443'
-      - '--entrypoints.websecure.http.tls=true'
       - '--entrypoints.web.address=:80'
 
     ports:
@@ -28,9 +22,7 @@ services:
   backend:
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/`)'
-      - 'traefik.http.routers.backend.entrypoints=web'
-      - 'traefik.http.services.backend.loadbalancer.server.port=5000'
+      - 'traefik.http.routers.backend.rule=Host(`localhost`)'
 
     command: --verbose
 
